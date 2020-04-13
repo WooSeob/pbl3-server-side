@@ -1,0 +1,57 @@
+<HTML>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <h1>New Class</h1>
+
+        <form action="/newclass" method="post">
+            <p>
+                <input id="classType" type="text" name="classtTpe" placeholder="class type">
+            </p>
+            <p>
+                <input id="category" type="text" name="category" placeholder="category">
+            </p>
+            <p>
+                <input id="studyAbout" type="text" name="studyAbout" placeholder="class about">
+            </p>
+            <p>
+                <input id="className" type="text" name="className" placeholder="class name">
+            </p>
+            <p>
+                <input id="price" type="text" name="price" placeholder="price">
+            </p>
+        </form>
+
+        <div id="btn_login">생성!</div>
+        <script>
+            $('#btn_login').click(()=>{
+                let data = 'classType=' + $('#classType').val() + 
+                '&category=' + $('#category').val() + 
+                '&studyAbout=' + $('#studyAbout').val() + 
+                '&className=' + $('#className').val() + 
+                '&price=' + $('#price').val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/newclass",
+                    data: data,
+                    dataType: "text",
+                    success: (res)=>{
+                        if(res == 'success'){
+                            //강의개설 성공
+                            window.location.replace("/");
+                        }else{
+                            //강의개설 실패
+                            alert('로그인실패');
+                        }
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+        </script>
+    </body>
+    
+</HTML>
