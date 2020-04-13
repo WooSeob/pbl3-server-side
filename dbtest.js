@@ -69,13 +69,15 @@ app.get('/class/:name/join', function(req, res){
             let joinAllowed = true;
 
             // user가 해당 강의 튜터인 경우
-            if(userObjID == targetClass.tutor){
+            if(String(userObjID) == String(targetClass.tutor)){
+                console.log('요청하는사람이 이미 튜터임')
                 joinAllowed = false;
             }
 
             // user가 이미 해당 강의 튜티인 경우
             for(let tuteeID of targetClass.tutees){
-                if(userObjID == tuteeID){
+                if(String(userObjID) == String(tuteeID)){
+                    console.log('이미 수강중입니다.')
                     joinAllowed = false;
                 }
             }
@@ -93,7 +95,8 @@ app.get('/class/:name/join', function(req, res){
                 res.redirect('/');
             }else{
                 //이미 수강중인경우 || 내가 그 강의의 튜터인 경우
-                console.log('이미 수강중입니다.')
+                console.log('수강신청에 실패했습니다.')
+                return;
             }
         });
     })
