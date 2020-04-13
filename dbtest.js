@@ -13,6 +13,97 @@ var Participation = require('./Schemas/Participation');
 
 var app = express();
 
+ //메일 인증 시스템 Start ----------
+var nodemailer = require('nodemailer');
+
+// var smtpTransport = nodemailer.createTransport({
+//     service: "Gamil",
+//     auth: {
+//         user: "Your Gamil ID",
+//         pass: "Gamil password"
+//     }
+// });
+
+// var rand, mailOptions, host, link;
+
+// app.get('/test_mail', function(req, res){
+//     res.sendfile('index_mail.html');
+// });
+
+// app.get('/mail_send', function(req, res){
+//     rand=Math.floor((Math.random() * 100) + 54);
+//     host = req.get('host');
+//     link = "http://"+req.get('host')+"/verify?id="+rand;
+//     mailOptions={
+//         to: req.query.to,
+//         subject: "please confirm your Eamil account",
+//         html : "Hello, <br> Please Click on the link to verify your email.<br><a href="+link+">Click here to verify</a>"
+//     }
+//     console.log(mailOptions);
+//     smtpTransport.sendMail(mailOptions, function(error, res){
+//         if(error){
+//                 console.log(error);
+//             res.end("error");
+//         } else {
+//                 console.log("Message sent: " + Response.message);
+//             res.end("sent");
+//         }
+//     });
+// });
+
+// app.get('/verify', function(req, res){
+//     console.log(req.protocol + ":/"+req.get('host'));
+//     if((req.protocol+"://"+req.get('host'))==("http://"+host))
+//     {
+//         console.log("Domain is matched. Informaiton is from Authentic email");
+//         if(req.query.id == rand){
+//             console.log("email is verified");
+//             res.end("<h1>Email "+mailOptions.to+" is been successfully verified!");
+//         }
+//         else{
+//             console.log("email is not verified");
+//             res.end("<h1>Bad Request</h1>");
+//         }
+//     }
+//     else{
+//         res.end("<h1>Request is from unknown source");
+//     }
+// });
+
+
+async function main(){    
+
+    let testAccount = await nodemailer.createTestAccount();
+
+    let transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false, 
+        auth: {
+            user: 'wanda.blick84@ethereal.email', 
+            pass: '7Qyk9upV4fFrW9MU8e'
+        }
+    });
+
+    let info = await transporter.sendMail({
+        from: '"Fred Foo " <foo@example.com>',
+        to: "rkdaudwh13@naver.com",
+        subject: "Tutor2Tutee 인증 메일 입니다. ",
+        text: "인증번호를 입력하세요!, 인증번호 : 0413 ", // plain text body
+        html: "<b>인증번호를 입력하세요!, 인증번호 : 0413 </b>" // html body   
+    });
+
+    console.log("Message sent: %s", info.messageId);
+    // 예 : Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+ 
+     // Preview only available when sending through an Ethereal account
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+}
+
+main().catch(console.error);
+ //메일 인증 시스템 End ----------
+
 const cookieStore = mongoStore(session);
 
 // DB 연결
