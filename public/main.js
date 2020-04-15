@@ -46,7 +46,7 @@ function loadMyClasses(){
                 // 로드 성공
                 let list = '';
                 for(let c of res){
-                    list = list + `<li><a href="/class/${c.className}/home">${c.className} - ${c.tutor}</a></li>`
+                    list = list + `<li>${c.className} - ${c.tutor}</li>`
                 }
                 $('.asTutor ul').append(list);
             }
@@ -66,7 +66,7 @@ function loadMyClasses(){
                 // 로드 성공
                 let list = '';
                 for(let c of res){
-                    list = list + `<li><a href="/class/${c.className}/home">${c.className} - ${c.tutor}</a></li>`
+                    list = list + `<li>${c.className} - ${c.tutor} <a href="/class/${c.className}/quit">수강철회</a></li>`
                 }
                 $('.asTutee ul').append(list);
             }
