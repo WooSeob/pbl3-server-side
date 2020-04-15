@@ -11,10 +11,24 @@ var QnA = require('./Schemas/QnA');
 var LectureNote = require('./Schemas/LectureNote');
 var Participation = require('./Schemas/Participation');
 
-var app = express();
+var app = new express();
+
+const socket = require('socket.io');
+const http  = require('http');
+const server = http.createServer(app);
+const io = socket(server);
+const fs = require('fs');
+
+app.use('/css', express.static('./public/css'));
+app.use('/js', express.static('./public/js'));
+
+
+
+
+
 
  //메일 인증 시스템 Start ----------
-var nodemailer = require('nodemailer');
+//var nodemailer = require('nodemailer');
 
 // var smtpTransport = nodemailer.createTransport({
 //     service: "Gamil",
@@ -71,42 +85,44 @@ var nodemailer = require('nodemailer');
 // });
 
 
-async function main(){    
+// async function main(){    
 
-    let testAccount = await nodemailer.createTestAccount();
+//     let testAccount = await nodemailer.createTestAccount();
 
-    let transporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false, 
-        auth: {
-            user: 'wanda.blick84@ethereal.email', 
-            pass: '7Qyk9upV4fFrW9MU8e'
-        }
-    });
+//     let transporter = nodemailer.createTransport({
+//         host: "smtp.ethereal.email",
+//         port: 587,
+//         secure: false, 
+//         auth: {
+//             user: 'wanda.blick84@ethereal.email', 
+//             pass: '7Qyk9upV4fFrW9MU8e'
+//         }
+//     });
 
-    let info = await transporter.sendMail({
-        from: '"Fred Foo " <foo@example.com>',
-        to: "rkdaudwh13@naver.com",
-        subject: "Tutor2Tutee 인증 메일 입니다. ",
-        text: "인증번호를 입력하세요!, 인증번호 : 0413 ", // plain text body
-        html: "<b>인증번호를 입력하세요!, 인증번호 : 0413 </b>" // html body   
-    });
+//     let info = await transporter.sendMail({
+//         from: '"Fred Foo " <foo@example.com>',
+//         to: "rkdaudwh13@naver.com",
+//         subject: "Tutor2Tutee 인증 메일 입니다. ",
+//         text: "인증번호를 입력하세요!, 인증번호 : 0413 ", // plain text body
+//         html: "<b>인증번호를 입력하세요!, 인증번호 : 0413 </b>" // html body   
+//     });
 
-    console.log("Message sent: %s", info.messageId);
-    // 예 : Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+//     console.log("Message sent: %s", info.messageId);
+//     // 예 : Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
  
-     // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-}
+//      // Preview only available when sending through an Ethereal account
+//     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+//     // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+// }
 
-main().catch(console.error);
- //메일 인증 시스템 End ----------
+// main().catch(console.error);
+//메일 인증 시스템 End ----------
 
 const cookieStore = mongoStore(session);
 
 // DB 연결
+
+
 mongoose.connect('mongodb://localhost:27017/test',{
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -344,6 +360,43 @@ app.get('/all/user', function(req, res){
     })
 });
 
+
+//실시간 채팅방
+app.get('/chat', function(req, res){
+    fs.readFile('./public/js/index_chat.html', function(err, data){
+        if(err){
+            res.send("에러다 !!");
+        } else {
+            res.writeHead(200, {'Content-Type':'text/html'});
+            res.write(data);
+            res.end();
+        }
+    })
+});
+
+io.sockets.on('connection', function(socket){
+    socket.on('newUser', function(name){
+        console.log(name + ' 님이 접속하였습니다!');
+        socket.name = name;
+        io.sockets.emit('update', {type:'connect', name:'SERVER', message:name+' 님이 접속하였습니다!'})
+    })
+
+
+socket.on('message', function(data){
+    data.name = socket.name;
+    console.log(data);
+    
+    socket.broadcast.emit('update', data);
+})
+//소켓에서 연결 해제 이벤트를 받으면, 콜백함수 실행
+socket.on('disconnect', function(){
+    console.log(socket.name+'님이 접속을 종료 했습니다..');
+
+//나가는 사람을 제외한 나머지 사람들에게 메세지 전송
+socket.broadcast.emit('update', {type:'disconnect', name : 'SERVER', message: socket.name+'님이 접속을 종료했습니다!'});
+})
+
+})
 
 app.get('/', function(req, res){
     res.send('<h1>Hello home page</h1>');
