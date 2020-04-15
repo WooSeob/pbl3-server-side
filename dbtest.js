@@ -19,13 +19,8 @@ const server = http.createServer(app);
 const io = socket(server);
 const fs = require('fs');
 
-app.use('/css', express.static('./public/css'));
-app.use('/js', express.static('./public/js'));
-
-
-
-
-
+app.use('/css', express.static('./static/css'));
+app.use('/js', express.static('./static/js'));
 
  //메일 인증 시스템 Start ----------
 //var nodemailer = require('nodemailer');
@@ -361,9 +356,9 @@ app.get('/all/user', function(req, res){
 });
 
 
-//실시간 채팅방
+//실시간 채팅방 Start -----  
 app.get('/chat', function(req, res){
-    fs.readFile('./public/js/index_chat.html', function(err, data){
+    fs.readFile('./static/js/index.html', function(err, data) {
         if(err){
             res.send("에러다 !!");
         } else {
@@ -373,12 +368,21 @@ app.get('/chat', function(req, res){
         }
     })
 });
-
+//소켓에서 연결 이벤트를 받으면, 콜백함수 실행
+//io.sockets는 접속되는 모든 소켓들을 칭함
+//바로 아랫줄 콜백함수의 socket은 접속된 해당 소켓
 io.sockets.on('connection', function(socket){
+     console.log('\n유저 접속 됨!\n');
+
+    //새로운 유저 접속 알려주기 - 접속 성공시 클라이언트에서 이벤트 발생
     socket.on('newUser', function(name){
         console.log(name + ' 님이 접속하였습니다!');
+
+        //이름 정하기
         socket.name = name;
-        io.sockets.emit('update', {type:'connect', name:'SERVER', message:name+' 님이 접속하였습니다!'})
+
+        //모든 소켓에게 전송하기 
+        io.sockets.emit('update', {type:'connect', name:'SERVER', message:name+' 님이 접속하였습니다!'});
     })
 
 
@@ -396,7 +400,7 @@ socket.on('disconnect', function(){
 socket.broadcast.emit('update', {type:'disconnect', name : 'SERVER', message: socket.name+'님이 접속을 종료했습니다!'});
 })
 
-})
+});
 
 app.get('/', function(req, res){
     res.send('<h1>Hello home page</h1>');
