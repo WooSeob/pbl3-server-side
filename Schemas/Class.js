@@ -1,4 +1,13 @@
 var mongoose = require('mongoose');
+var ClassBasicInfo = require('./ClassBasicInfo')
+var LectureNote = require('./LectureNote')
+var QnA = require('./QnA');
+var Course = require('./Course');
+
+const ParticipationSchema = new mongoose.Schema({
+    
+});
+
 
 const ClassSchema = new mongoose.Schema({
     //튜터 : User
@@ -6,7 +15,6 @@ const ClassSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
-
     //튜티
     tutees: [
         {
@@ -43,63 +51,28 @@ const ClassSchema = new mongoose.Schema({
     },
 
     //--------------------------------------------------------------------------
-    //성적인증
-    grade: String,
-
-    //튜터 하고싶은말
-    description: String,
-
-    //수업시간
-    lectureTime: {
-        startAt: Date,
-        duration: Number
-    },
-
-    //커리큘럼
-    course: [
-        {
-            type: String
-        }
-    ],
-    
+    //강의실 홈에 보여질 내용 (성적인증, 소개글, 수업시간)
+    basicInfo: ClassBasicInfo,
     //강의노트
-    lectureNote: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "LectureNote"
-        }
-    ],
-
+    lectureNote: [LectureNote],
     //출결확인
-    participation: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Participation"
-    },
-
+    participation: ParticipationSchema,
     //질의응답
-    qna: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "QnA"
-        }
-    ],
-
+    qna: [QnA],
 
     // Not Required
     //스카이프 링크 - 커리큘럼 온라인 실시간
     skypeLink: String,
-
-    //강의 링크 - 커리큘럼 온라인
-    course:[
-        {
-            description: String,
-            link: String
-        }
-    ],
-
     //실시간 채팅방 - 질의응답형
-    chattingRoom: String
+    chattingRoom: String,
+    //강의 링크 - 커리큘럼 온라인
+    course:[Course]
 });
+
+ClassSchema.methods.getClassData = function(data){
+    console.log('getClassData : ' + data);
+    console.log(this);
+};
 
 const Class = mongoose.model("Class", ClassSchema);
 

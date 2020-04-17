@@ -5,6 +5,6 @@ const ParticipationSchema = new mongoose.Schema({
     
 });
 
-const Participation = mongoose.model("Participation", ParticipationSchema);
+// const Participation = mongoose.model("Participation", ParticipationSchema);
 
-module.exports = Participation;
+module.exports = ParticipationSchema;
