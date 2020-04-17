@@ -22,6 +22,10 @@ const server = http.createServer(app);
 const io = socket(server);
 const fs = require('fs');
 
+//CORS setting
+const cors = require('cors');
+app.use(cors());
+
 app.use('/css', express.static('./static/css'));
 app.use('/js', express.static('./static/js'));
 
