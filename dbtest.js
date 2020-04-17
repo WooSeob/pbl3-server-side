@@ -15,7 +15,7 @@ var authRouter = require('./routes/auth');
 var userRouter = require('./routes/user');
 
 var app = new express();
-
+//채팅방
 const socket = require('socket.io');
 const http  = require('http');
 const server = http.createServer(app);
@@ -213,7 +213,6 @@ app.post('/newclass', function(req, res){
     res.send('fail')
 })
 
-<<<<<<< HEAD
 //유저 정보보기
 app.get('/user/:id', function(req, res){
     var id = req.params.id;
@@ -282,8 +281,6 @@ socket.broadcast.emit('update', {type:'disconnect', name : 'SERVER', message: so
 
 });
 
-=======
->>>>>>> 831504ec5a459f6bea934476cd8e66d1cd54bed6
 app.get('/', function(req, res){
     res.send('<h1>Hello home page</h1>');
 });
