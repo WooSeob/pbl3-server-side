@@ -41,7 +41,6 @@ router.get('/logout', function(req, res){
 
 //로그인정보 받아오기
 router.get('/isAuthenticated', function(req, res){
-    //로그인정보 받아오기
     //로그인 되있으면 유저정보 응답
     //로그인 안되있으면 'fail' 응답
     if(req.session.username){

@@ -1,11 +1,38 @@
 var express = require('express');
+var mongoose = require('mongoose');
 var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
-var router = express.Router();
+var ClassBasicInfoSchema = require('../Schemas/ClassBasicInfo')
+const ClassBasicInfo = mongoose.model("ClassBasicInfo", ClassBasicInfoSchema);
+
+var classRouter = express.Router();
+
+//수업생성
+classRouter.post('/', function(req, res){
+    //튜터 아이디로 수업 생성
+    console.log(req.session);
+    User.findOne({username: req.session.username}, (err,tutor)=>{
+        if(err){ res.send('fail'); return; }
+
+        var newClass = new Class({
+            classType: req.body.classType,
+            category: req.body.category,
+            studyAbout: req.body.studyAbout,
+            className: req.body.className,
+            price: req.body.price,
+            tutor: tutor._id
+        });
+        newClass.save();
+
+        //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
+        tutor.classesAsTutor.push(newClass._id);
+        tutor.save();
+        res.send('success');
+    });
+})
 
 //수업 정보 받아오기
-router.get('/:name', function(req, res){
-    console.log('/class/~')
+classRouter.get('/:name', function(req, res){
     let targetClassName = req.params.name;
     let query = {
         className: targetClassName
@@ -20,8 +47,20 @@ router.get('/:name', function(req, res){
     })
 });
 
+//강의 기본정보 (성적인증이미지url, 소개글) 추가
+classRouter.post('/:name/basic-info', (req, res)=>{
+    let targetClassName = req.params.name;
+    var info = new ClassBasicInfo({
+        grade: req.body.grade,
+        description: req.body.description
+    })
+    Class.findOneAndUpdate({className: targetClassName}, {basicInfo: info}, (err, found)=>{
+        res.send(found);
+    });
+})
+
 //수업 철회하기
-router.get('/:name/quit', function(req, res){
+classRouter.get('/:name/quit', function(req, res){
     let targetClassName = req.params.name;
 
     if(!req.session.username){
@@ -70,7 +109,7 @@ router.get('/:name/quit', function(req, res){
 })
 
 //수업 참여하기
-router.get('/:name/join', function(req, res){
+classRouter.get('/:name/join', function(req, res){
     let targetClassName = req.params.name;
     
     let userObjID;
@@ -120,4 +159,5 @@ router.get('/:name/join', function(req, res){
     })
 });
 
-module.exports = router;
+
+module.exports = classRouter;

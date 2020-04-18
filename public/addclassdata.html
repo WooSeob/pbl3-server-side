@@ -1,0 +1,41 @@
+<HTML>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <h1>AddClassData</h1>
+
+        <form action="/auth/login" method="post">
+        <p>
+            <input id="id" type="text" name="username" placeholder="class name">
+        </p>
+        <p>
+            <input id="grade" type="text" name="grade" placeholder="grade">
+        </p>
+        <p>
+            <input id="desc" type="text" name="desc" placeholder="description">
+        </p>
+        </form>
+        <div id="btn_login">submit</div>
+        <script>
+            $('#btn_login').click(()=>{
+                var className = $('#id').val();
+                var grade = $('#grade').val();
+                var desc = $('#desc').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + className + "/basic-info",
+                    data: "grade=" + grade + "&description=" + desc,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+        </script>
+    </body>
+    
+</HTML>

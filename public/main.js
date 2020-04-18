@@ -37,10 +37,9 @@ $(document).ready(()=>{
 
 function loadMyClasses(){
     $.ajax({
-        type: 'POST',
-        url: '/myclass/tutor',
+        type: 'GET',
+        url: '/user/class/tutor',
         dataType: "json",
-        data: "userid=" + user.username,
         success: function(res){
             if(res != 'fail'){
                 // 로드 성공
@@ -57,10 +56,9 @@ function loadMyClasses(){
     });
 
     $.ajax({
-        type: 'POST',
-        url: '/myclass/tutee',
+        type: 'GET',
+        url: '/user/class/tutee',
         dataType: "json",
-        data: "userid=" + user.username,
         success: function(res){
             if(res != 'fail'){
                 // 로드 성공

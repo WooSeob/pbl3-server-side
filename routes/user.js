@@ -1,10 +1,14 @@
 var express = require('express');
 var User = require('../Schemas/User');
-var router = express.Router();
+var Class = require('../Schemas/Class');
+var userRouter = express.Router();
 
+/*
+    회원가입 /register -> /
+*/
 
 //회원가입
-router.post('/register', function(req, res){
+userRouter.post('/register', function(req, res){
     User.create({
         username: req.body.username,
         password: req.body.password,
@@ -17,26 +21,60 @@ router.post('/register', function(req, res){
     res.send('Create Successfully');
 })
 
-//모든 유저보기
-router.get('/all', function(req, res){
-    User.find({})
-    .then((data)=>{
-        res.send(data);
-        console.log(data);
-    })
-    .catch((err)=>{
-        console.log(err);
-    })
-});
-
 //유저 정보보기
-router.get('/:id', function(req, res){
-    var id = req.params.id;
-    User.find({username: id}, (err,data)=>{
+userRouter.get('/:id', function(req, res){
+    var targetID = req.params.id;
+
+    let query = {
+        username: targetID
+    };
+    if(targetID == 'all'){query = null;}
+
+    User.find(query, (err,data)=>{
         console.log(data);
         res.send(data)
     });
 });
 
+//내가 튜터인 클래스들 받아오기
+userRouter.get('/class/tutor', function(req, res){
+    if(req.session.username){
+        User.findOne({username: req.session.username}, async (err, user)=>{
+            if(err){
+                console.log('해당하는 유저를 찾을 수 없습니다.');
+            } 
+            //내가 튜터인 강의 리스트 만들기
+            let classList = new Array();
+            for(let classID of user.classesAsTutor){
+                let found = await Class.findById(classID);
+                classList.push(found);
+            }
+            res.json(classList);
+        });
+    }else{
+        res.send('잘못된 접근입니다.');
+    }
+})
 
-module.exports = router;
+//내가 튜티인 클래스들 받아오기
+userRouter.get('/class/tutee', function(req, res){
+    if(req.session.username){
+        User.findOne({username: req.session.username}, async (err, user)=>{
+            if(err){
+                console.log('해당하는 유저를 찾을 수 없습니다.');
+            }
+            //내가 튜티인 강의 리스트 만들기
+            let classList = new Array();
+            for(let classID of user.classesAsTutee){
+                let found = await Class.findById(classID);
+                classList.push(found);
+            }
+            res.json(classList);
+        });
+    }else{
+        res.send('잘못된 접근입니다.');
+    }
+})
+
+
+module.exports = userRouter;
