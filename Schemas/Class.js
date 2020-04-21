@@ -3,6 +3,7 @@ var ClassBasicInfo = require('./ClassBasicInfo')
 var LectureNote = require('./LectureNote')
 var QnA = require('./QnA');
 var Course = require('./Course');
+var LectureTime = require('./LectureTime');
 
 const ParticipationSchema = new mongoose.Schema({
     
@@ -11,6 +12,10 @@ const ParticipationSchema = new mongoose.Schema({
 
 const ClassSchema = new mongoose.Schema({
     //튜터 : User
+    state: {
+        type: String,
+        enum: ['Waiting', 'InProgress', 'Ended']
+    },
     tutor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
@@ -66,7 +71,11 @@ const ClassSchema = new mongoose.Schema({
     //실시간 채팅방 - 질의응답형
     chattingRoom: String,
     //강의 링크 - 커리큘럼 온라인
-    course:[Course]
+    course:[Course],
+    //수업시간
+    lectureTime: [LectureTime],
+    //수업에 참여할 수 있는 최대 튜티수
+    maxTutee: Number
 });
 
 ClassSchema.methods.getClassData = function(data){

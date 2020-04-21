@@ -5,27 +5,143 @@
     <body>
         <h1>AddClassData</h1>
 
-        <form action="/auth/login" method="post">
         <p>
             <input id="id" type="text" name="username" placeholder="class name">
         </p>
-        <p>
-            <input id="grade" type="text" name="grade" placeholder="grade">
-        </p>
-        <p>
-            <input id="desc" type="text" name="desc" placeholder="description">
-        </p>
+
+        <h2>기본정보 입력</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="grade" type="text" name="grade" placeholder="grade">
+            </p>
+            <p>
+                <input id="class_desc" type="text" name="desc" placeholder="description">
+            </p>
         </form>
-        <div id="btn_login">submit</div>
+        <div id="basicinfo_submit">submit</div>
+
+        <h2>커리큘럼 추가</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="course_desc" type="text" name="desc" placeholder="desc">
+            </p>
+            <p>
+                <input id="link" type="text" name="link" placeholder="link">
+            </p>
+        </form>
+        <div id="course_submit">submit</div>
+
+        <h2>강의시간 추가</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="startAt" type="text" name="startAt" placeholder="startAt">
+            </p>
+            <p>
+                <input id="duration" type="text" name="lidurationk" placeholder="duration">
+            </p>
+        </form>
+        <div id="lecturetime_submit">submit</div>
+
+        <h2>질문 추가</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="question" type="text" name="question" placeholder="question">
+            </p>
+        </form>
+        <div id="question_submit">submit</div>
+
+        <h2>답변 추가</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="qid"" type="text" name="qid" placeholder="qid">
+            </p>
+            <p>
+                <input id="answer" type="text" name="answer" placeholder="answer">
+            </p>
+        </form>
+        <div id="answer_submit">submit</div>
+
+
         <script>
-            $('#btn_login').click(()=>{
-                var className = $('#id').val();
-                var grade = $('#grade').val();
-                var desc = $('#desc').val();
+            $('#basicinfo_submit').click(()=>{
+                let className = $('#id').val();
+                let grade = $('#grade').val();
+                let desc = $('#class_desc').val();
                 $.ajax({
                     type: "POST",
                     url: "/class/" + className + "/basic-info",
                     data: "grade=" + grade + "&description=" + desc,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
+            $('#course_submit').click(()=>{
+                let className = $('#id').val();
+                let link = $('#link').val();
+                let desc = $('#course_desc').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + className + "/course",
+                    data: "link=" + link + "&description=" + desc,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
+            $('#lecturetime_submit').click(()=>{
+                let className = $('#id').val();
+                let startAt = $('#startAt').val();
+                let duration = $('#duration').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + className + "/lecture-time",
+                    data: "startAt=" + startAt + "&duration=" + duration,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
+            $('#question_submit').click(()=>{
+                let className = $('#id').val();
+                let question = $('#question').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + className + "/question",
+                    data: "content=" + question,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
+            $('#answer_submit').click(()=>{
+                let className = $('#id').val();
+                let qid = $('#qid').val();
+                let answer = $('#answer').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + className + "/question/" + qid,
+                    data: "content=" + answer,
                     dataType: "text",
                     success: (res)=>{
                         console.log(res);
