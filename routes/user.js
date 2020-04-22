@@ -42,6 +42,7 @@ userRouter.get('/class/tutor', function(req, res){
         User.findOne({username: req.session.username}, async (err, user)=>{
             if(err){
                 console.log('해당하는 유저를 찾을 수 없습니다.');
+                return res.send('fail')
             } 
             //내가 튜터인 강의 리스트 만들기
             let classList = new Array();
@@ -62,6 +63,7 @@ userRouter.get('/class/tutee', function(req, res){
         User.findOne({username: req.session.username}, async (err, user)=>{
             if(err){
                 console.log('해당하는 유저를 찾을 수 없습니다.');
+                return res.send('fail')
             }
             //내가 튜티인 강의 리스트 만들기
             let classList = new Array();

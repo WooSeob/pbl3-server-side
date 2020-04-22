@@ -77,11 +77,23 @@ const ClassSchema = new mongoose.Schema({
     //수업에 참여할 수 있는 최대 튜티수
     maxTutee: Number
 });
+/*
+    스키마 -> 모델 -> 다큐먼트
+*/
 
+/*
+    Class 다큐먼트가 호출하는 메서드
+*/
 ClassSchema.methods.getClassData = function(data){
-    console.log('getClassData : ' + data);
-    console.log(this);
+    return data + 1;
 };
+
+/*
+    Class 모델이 호출하는 메서드
+*/
+ClassSchema.statics.staticm = function(data){
+    console.log(data)
+}
 
 const Class = mongoose.model("Class", ClassSchema);
 
