@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+
+
+<script>
+  
+  //메일 보냈는지 알려주는 Func
+  function alertMail(){
+    alert("인증메일을 발송했습니다.");
+  }
+
+  function timer() {
+    var time = 180;
+    var min = "";
+    var sec = "";
+
+    var x = setInterval(function(){
+        min = parseInt(time/60);
+        sec = time%60;
+        document.getElementById("timer").innerHTML=min+"분"+sec+"초";
+        time--;
+
+        if(time < 0){
+          
+            document.getElementById("timer").innerHTML="시간 초과";
+            alert("인증시간이 초과되었습니다.");
+            clearInterval(x);
+            window.location = "http://localhost:8080";
+        }
+    }, 1000)
+    }
+</script>
+
+<body>
+    <h1>한경대학교 Tutor 2 Tutee 이메일 인증 테스트 페이지</h1>
+    
+    <form action="/send-email" method="POST">
+     메일 주소: <input type="text" name="email">@hknu.ac.kr
+    <input type="submit" value="인증" onclick="alertMail(), timer()"><br>
+    
+    </form>
+    
+    <form action="/auth-email" method="POST">
+      인증 번호: <input type="text" name="authNum">
+    <input type="submit" value="확인">
+    </form>
+
+     <span id="span1">제한시간 :</span>
+     <span id="timer"></span>
+ 
+
+
+  </body>
+</html>
+
+
