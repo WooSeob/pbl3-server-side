@@ -78,7 +78,7 @@ function loadMyClasses(){
 function loadAllClasses(){
     $.ajax({
         type: 'GET',
-        url: '/class/all',
+        url: '/class/name/all',
         dataType: "json",
         success: function(res){
             if(res != 'fail'){

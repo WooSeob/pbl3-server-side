@@ -89,22 +89,39 @@ $('#go').click(()=>{
 
     $.ajax({
         type: "GET",
-        url: "/class/" + $('#className').val(),
+        url: "/class/name/" + $('#className').val(),
         dataType: "json",
         success: (res)=>{
             if(res != 'fail'){
                 //강의정보 불러오기 성공
-                classData = res[0];
-                console.log(classData.className)
-                $('#classRoomTitle').html(classData.className);
+                let classID = res[0]._id;
 
-                //강의 타입별로 강의실 불러오기
-                LoadClass[classData.classType](classData);
+                $.ajax({
+                    type: "GET",
+                    url: "/class/" + classID,
+                    dataType: "json",
+                    success: (res)=>{
+                        if(res != 'fail'){
+                            //강의정보 불러오기 성공
+                            console.log(res)
+                            let classData = res;
+                            $('#classRoomTitle').html(classData.className);
+            
+                            //강의 타입별로 강의실 불러오기
+                            LoadClass[classData.classType](classData);
+                        }
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
             }
         },
         error: (xhr, status, responseTxt)=>{
             console.log(xhr);
         }
     })
+
+    
 
 })

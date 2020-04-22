@@ -84,16 +84,66 @@ const ClassSchema = new mongoose.Schema({
 /*
     Class 다큐먼트가 호출하는 메서드
 */
-ClassSchema.methods.getClassData = function(data){
-    return data + 1;
-};
+// ['RealtimeOnlineCourseType', 'OnlineCourseType', 'QnAType', 'OfflineType']
+const Type = {
+    'Course': ['RealtimeOnlineCourseType', 'OnlineCourseType', 'OfflineType'],
+    'LectureTime': ['RealtimeOnlineCourseType', 'QnAType'],
+    'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType']
+}
 
 /*
     Class 모델이 호출하는 메서드
 */
-ClassSchema.statics.staticm = function(data){
-    console.log(data)
-}
+
+ClassSchema.statics.addCourse = function(targetClassID, data, callback){
+    this.findById(targetClassID, (err, found)=>{
+        if(err){callback(err);return}
+
+        if(Type['Course'].includes(found.classType)){
+            //커리큘럼 추가.
+            found.course.push(data);
+            found.save(()=>{
+                console.log('커리큘럼 추가성공')
+            });
+        }else{
+            callback('이 클래스에는 커리큘럼을 추가 할 수 없습니다.');
+        }
+    })
+};
+
+ClassSchema.statics.addLectureTime = function(targetClassID, data, callback){
+    this.findById(targetClassID, (err, found)=>{
+        if(err){callback(err);return}
+
+        if(Type['LectureTime'].includes(found.classType)){
+            //강의시간 추가.
+            found.lectureTime.push(data);
+            found.save(()=>{
+                console.log('강의시간 추가성공')
+            });
+        }else{
+            callback('이 클래스에는 강의시간을 추가 할 수 없습니다.');
+        }
+    })
+};
+
+ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
+    this.findById(targetClassID, (err, found)=>{
+        if(err){callback(err);return}
+
+        if(Type['MaxTutee'].includes(found.classType)){
+            //강의시간 추가.
+            found.maxTutee = data;
+            found.save(()=>{
+                console.log('강의시간 추가성공')
+            });
+        }else{
+            callback('이 클래스에는 최대 튜티수를 설정 할 수 없습니다.');
+        }
+    })
+};
+
+
 
 const Class = mongoose.model("Class", ClassSchema);
 

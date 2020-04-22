@@ -25,9 +25,9 @@ var classRouter = express.Router();
     2. 수업타입별 데이터 CRUD
         1. 커리큘럼 온라인 실시간
             1. 정보
-                1. 강의시간
-                2. 커리큘럼
-                3. 최대 튜티수
+                1. 강의시간 V
+                2. 커리큘럼 V
+                3. 최대 튜티수 V
             2. 기능
                 1. 질의응답
                 2. 수업노트
@@ -36,7 +36,7 @@ var classRouter = express.Router();
 
         2. 커리큘럼 온라인 실시간X
             1. 정보
-                1. 커리큘럼(링크 포함)
+                1. 커리큘럼(링크 포함) V
             2. 기능
                 1. 질의응답
                 2. 출결관리(진도율)
@@ -44,20 +44,33 @@ var classRouter = express.Router();
 
         3. 질의응답형
             1. 정보
-                1. 강의시간
+                1. 강의시간 V
             2. 기능
                 1. 질의응답
                 2. 실시간 채팅방 ##
 
         4. 오프라인형
             1. 정보
-                1. 강의시간
-                2. 커리큘럼
-                3. 최대 튜티수
+                1. 강의시간 V
+                2. 커리큘럼 V
+                3. 최대 튜티수 V
             2. 기능
                 1. 질의응답
                 2. 수업노트
                 3. 출결관리
+
+        1. 기능 라우팅
+            1. 강의시간 V
+            2. 커리큘럼 V
+            3. 최대 튜티수 V
+
+            4. 질의응답 V
+            5. 수업노트
+            6. 출결관리
+
+            7. 스카이프링크
+            8. 동영상링크
+            9. 실시간채팅방  
 */
 
 //수업생성
@@ -123,12 +136,13 @@ classRouter.get('/:id', function(req, res){
 
 //강의 기본정보 (성적인증이미지url, 소개글) 추가
 classRouter.post('/:id/basic-info', (req, res)=>{
-    let targetClassID = req.params.ID;
+    let targetClassID = req.params.id;
     var info = new ClassBasicInfo({
         grade: req.body.grade,
         description: req.body.description
     })
     Class.findByIdAndUpdate(targetClassID, {basicInfo: info}, (err, found)=>{
+        if(err){console.log(err)}
         res.send(found);
     });
 })
@@ -137,44 +151,59 @@ classRouter.post('/:id/basic-info', (req, res)=>{
 classRouter.post('/:id/course', (req, res)=>{
 //@@@ 이 함수는 받아온 데이터로 course 만들어서 Class.course배열에 계속해서 집어넣는 함숩니다. 
     let targetClassID = req.params.id;
+    let username = req.session.username
     var newCourse = new Course({
         description: req.body.description,
         link: req.body.link
     })
-    Class.findById(targetClassID, (err, found)=>{
-        found.course.push(newCourse);
-        found.save();
-    });
+
+    User.isTutorOf(username, targetClassID, ()=>{
+        Class.addCourse(targetClassID, newCourse, (errmsg)=>{
+            console.log(errmsg);
+        })
+    })
 })
 
 //강의시간 추가
 classRouter.post('/:id/lecture-time', (req, res)=>{
     //@@@ 이 함수는 받아온 데이터로 LectureTime 만들어서 Class.LectureTime배열에 계속해서 집어넣는 함숩니다. 
     let targetClassID = req.params.id;
+    let username = req.session.username
     var newTime = new LectureTime({
         startAt: req.body.startAt,
         duration: req.body.duration
     })
-    Class.findById(targetClassID, (err, found)=>{
-        found.lectureTime.push(newTime);
-        found.save();
-    });
+
+    User.isTutorOf(username, targetClassID, ()=>{
+        Class.addLectureTime(targetClassID, newTime, (errmsg)=>{
+            console.log(errmsg);
+        })
+    })
 })
 
 //최대 튜티수 추가
 classRouter.post('/:id/max-tutee', (req, res)=>{
     //@@@ 이 함수는 Class.maxTutee에 받아온 데이터를 넣는 함숩니다.
     let targetClassID = req.params.id;
-    Class.findById(targetClassID, (err, found)=>{
-        if(err){
-            res.send('fail');
-            return;
-        }
-        found.maxTutee = req.body.maxTutee;
-        found.save(()=>{
-            res.send('success');
-        });
-    });
+    let username = req.session.username
+    let numMaxTutee = req.body.maxTutee;
+
+    User.isTutorOf(username, targetClassID, ()=>{
+        Class.addMaxTutee(targetClassID, numMaxTutee, (errmsg)=>{
+            console.log(errmsg);
+        })
+    })
+})
+
+//QnA 질문 게시글 조회
+classRouter.get('/:id/question', (req, res)=>{
+    let targetClassID = req.params.id;
+
+    Class.findById(targetClassID, (err, Class)=>{
+        if(err){console.log(err);return res.send('fail')}
+        console.log(Class)
+        res.send(Class.qna);
+    })
 })
 
 //QnA 질문 게시글 추가
@@ -183,24 +212,24 @@ classRouter.post('/:id/question', (req, res)=>{
     //그 수업의 상태는 수업진행중이어야 한다 ?
     let targetClassID = req.params.id;
     let content = req.body.content;
+    let username = req.session.username
 
-    User.findOne({username: req.session.username}, async (err, user)=>{
-        userObjID = await user._id;
-        if(user.isTuteeOf(targetClassID)){
-            //질문추가
-            Class.findById(targetClassID, (err, Class)=>{
-                if(err){console.log(err);return res.send('fail')}
+    User.isTuteeOf(username, targetClassID, ()=>{
+        //질문추가
+        Class.hasFunction('QnA', targetClassID, (err, found)=>{
+            if(err){console.log(err);return res.send('fail')}
                 Class.qna.push(new QnA({
                     question: {
                         Writer: user._id,
                         content: content
                     }
                 }));
-                Class.save(()=>{
-                    res.send('success');
+            found.save(()=>{
+                res.send('success');
+            })   
                 })    
-            })
-        }
+            })   
+        })
     })
 })
 
@@ -213,27 +242,23 @@ classRouter.post('/:id/question/:qid', (req, res)=>{
     let targetClassID = req.params.id;
     let targetQuestion = req.params.qid;
     let content = req.body.content;
+    let username = req.session.username
 
-    User.findOne({username: req.session.username}, async (err, user)=>{
-        let userID = await user._id;
-        //현재 로그인 되있는 사람이 그 수업의 튜터일때 답변 작성가능
-        if(user.isTutorOf(targetClassID)){
-            
-            Class.findById(targetClassID, (err, found)=>{
+    //TODO 권한 없을때 응답 어떻게 해야할지 해결할것
+    User.isTutorOf(username, targetClassID, ()=>{
+        Class.findById(targetClassID, (err, found)=>{
+            //답변 달기                
                 //답변 달기                
-                found.qna.id(targetQuestion).answer = {
-                    content: content
-                }
-                found.save(()=>{
-                    console.log('답변 저장')
-                    res.send('success')
-                })
-                console.log(found.qna.id(targetQuestion))
+            //답변 달기                
+            found.qna.id(targetQuestion).answer = {
+                content: content
+            }
+            found.save(()=>{
+                console.log('답변 저장')
+                res.send('success')
             })
-        }else{
-            console.log('해당 수업의 튜터가 아닌데 QnA답변 달려고 시도');
-            res.send('fail');
-        }
+            console.log(found.qna.id(targetQuestion))
+        })
     })
 })
 
