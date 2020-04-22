@@ -18,6 +18,7 @@ router.post('/login', function(req, res){
         if(pwd == user.password){
             //로그인 성공
             req.session.username = user.username;
+            req.session.id = user._id;
             req.session.save(()=>{
                 console.log(req.session);
                 console.log('로그인 성공.');

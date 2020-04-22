@@ -5,10 +5,11 @@ var QnA = require('./QnA');
 var Course = require('./Course');
 var LectureTime = require('./LectureTime');
 
+const MIN_TUTEE = 2;
+
 const ParticipationSchema = new mongoose.Schema({
     
 });
-
 
 const ClassSchema = new mongoose.Schema({
     //튜터 : User
@@ -84,22 +85,48 @@ const ClassSchema = new mongoose.Schema({
 /*
     Class 다큐먼트가 호출하는 메서드
 */
-// ['RealtimeOnlineCourseType', 'OnlineCourseType', 'QnAType', 'OfflineType']
-const Type = {
-    'Course': ['RealtimeOnlineCourseType', 'OnlineCourseType', 'OfflineType'],
-    'LectureTime': ['RealtimeOnlineCourseType', 'QnAType'],
-    'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType']
-}
+ClassSchema.methods.isJoinAllowed = function(){
+    if(this.classType == 'OnlineCourseType'){
+        if(this.state == 'InProgress'){
+            return true;
+        }else{
+            return false;
+        }
+    }else{
+        if(this.state == 'Waiting'){
+            return true;
+        }else{
+            return false;
+        }
+    }
+};
+
+ClassSchema.methods.start = function(next){
+    if(this.state == 'Waiting' && this.tutees.length >= MIN_TUTEE){
+        this.state = 'InProgress'
+        this.save(()=>{
+            console.log(this._id + ' 강의시작');
+            next(null);
+        })
+    }else{
+        next('강의를 시작 할 수 없습니다.');
+    }
+};
+
 
 /*
     Class 모델이 호출하는 메서드
 */
-
+const DATA_TYPE = {
+    'Course': ['RealtimeOnlineCourseType', 'OnlineCourseType', 'OfflineType'],
+    'LectureTime': ['RealtimeOnlineCourseType', 'QnAType'],
+    'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType']
+}
 ClassSchema.statics.addCourse = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
 
-        if(Type['Course'].includes(found.classType)){
+        if(DATA_TYPE['Course'].includes(found.classType)){
             //커리큘럼 추가.
             found.course.push(data);
             found.save(()=>{
@@ -115,7 +142,7 @@ ClassSchema.statics.addLectureTime = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
 
-        if(Type['LectureTime'].includes(found.classType)){
+        if(DATA_TYPE['LectureTime'].includes(found.classType)){
             //강의시간 추가.
             found.lectureTime.push(data);
             found.save(()=>{
@@ -131,7 +158,7 @@ ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
 
-        if(Type['MaxTutee'].includes(found.classType)){
+        if(DATA_TYPE['MaxTutee'].includes(found.classType)){
             //강의시간 추가.
             found.maxTutee = data;
             found.save(()=>{

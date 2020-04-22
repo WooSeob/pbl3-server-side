@@ -30,8 +30,8 @@ const UserSchema = new mongoose.Schema({
     모델 = mongoose.model("모델명", 스키마)
     스키마로 모델을 만든다
 */
-UserSchema.statics.isTutorOf = function(username, ClassID, next){
-    this.findOne({username: username})
+UserSchema.statics.isTutorOf = function(userID, ClassID, next){
+    this.findById(userID)
     .then((user)=>{
         console.log('found')
         if(user.classesAsTutor.includes(ClassID)){
@@ -45,8 +45,8 @@ UserSchema.statics.isTutorOf = function(username, ClassID, next){
     })
 };
 
-UserSchema.statics.isTuteeOf = function(username, ClassID, next){
-    this.findOne({username: username})
+UserSchema.statics.isTuteeOf = function(userID, ClassID, next){
+    this.findById(userID)
     .then((user)=>{
         console.log('found')
         if(user.classesAsTutee.includes(ClassID)){
