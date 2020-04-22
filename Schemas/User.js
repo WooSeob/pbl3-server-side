@@ -39,21 +39,25 @@ UserSchema.statics.staticm = function(data){
     (다큐먼트 = new User모델)
     모델로 다큐먼트를 만든다
 */
-UserSchema.methods.isTutee = function(ClassID){
+
+//User가 그 수업의 튜티인지 확인하는 함수
+UserSchema.methods.isTuteeOf = function(ClassID){
     for(let c of this.classesAsTutee){
         console.log(c)
         if(c._id == ClassID){
-            console.log(this.id + '는' + ClassID + '의 튜티입니다.')
+            console.log(this.id + '는 수업' + ClassID + '의 튜티입니다.')
             return true
         }
     }
     return false;
 };
-UserSchema.methods.isTutor = function(ClassID){
+
+//User가 그 수업의 튜터인지 확인하는 함수
+UserSchema.methods.isTutorOf = function(ClassID){
     for(let c of this.classesAsTutor){
         console.log(c)
         if(c._id == ClassID){
-            console.log(this.id + '는' + ClassID + '의 튜터입니다.')
+            console.log(this.id + '는 수업' + ClassID + '의 튜터입니다.')
             return true
         }
     }

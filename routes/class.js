@@ -112,7 +112,6 @@ classRouter.get('/name/:name', function(req, res){
     })
 });
 
-
 //수업id로 정보 받아오기
 classRouter.get('/:id', function(req, res){
     let targetClassID = req.params.id;
@@ -187,18 +186,16 @@ classRouter.post('/:id/question', (req, res)=>{
 
     User.findOne({username: req.session.username}, async (err, user)=>{
         userObjID = await user._id;
-        if(user.isTutee(targetClassID)){
-            //질문 추가
-            let newQnA = new QnA({
-                question: {
-                    Writer: user._id,
-                    content: content
-                }
-            })
-            //질문저장
+        if(user.isTuteeOf(targetClassID)){
+            //질문추가
             Class.findById(targetClassID, (err, Class)=>{
                 if(err){console.log(err);return res.send('fail')}
-                Class.qna.push(newQnA);
+                Class.qna.push(new QnA({
+                    question: {
+                        Writer: user._id,
+                        content: content
+                    }
+                }));
                 Class.save(()=>{
                     res.send('success');
                 })    
@@ -220,26 +217,18 @@ classRouter.post('/:id/question/:qid', (req, res)=>{
     User.findOne({username: req.session.username}, async (err, user)=>{
         let userID = await user._id;
         //현재 로그인 되있는 사람이 그 수업의 튜터일때 답변 작성가능
-        if(user.isTutor(targetClassID)){
+        if(user.isTutorOf(targetClassID)){
+            
             Class.findById(targetClassID, (err, found)=>{
-                //이하 거지같은 코드.............................
-                //그 수업 qna들 중에서 
-                for(let qna of found.qna){
-                    //찾으면
-                    if(String(qna._id) == String(targetQuestion)){
-                        //답변 추가
-                        let answer = {
-                            content: content
-                        }
-                        qna.answer = answer;
-                        console.log(qna);
-                        
-                        found.qna.pull(qna._id)
-                        found.qna.push(qna)
-                        found.save();
-                        console.log('답변 저장')
-                    }
+                //답변 달기                
+                found.qna.id(targetQuestion).answer = {
+                    content: content
                 }
+                found.save(()=>{
+                    console.log('답변 저장')
+                    res.send('success')
+                })
+                console.log(found.qna.id(targetQuestion))
             })
         }else{
             console.log('해당 수업의 튜터가 아닌데 QnA답변 달려고 시도');
