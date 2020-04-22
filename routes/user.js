@@ -21,16 +21,26 @@ userRouter.post('/register', function(req, res){
     res.send('Create Successfully');
 })
 
-//유저 정보보기
+//Username으로 유저 정보요청
+userRouter.get('/name/:name', function(req, res){
+    var targetName = req.params.name;
+
+    let query = {
+        username: targetName
+    };
+    if(targetName == 'all'){query = null;}
+
+    User.find(query, (err,data)=>{
+        console.log(data);
+        res.send(data)
+    });
+});
+
+//ID로 유저 정보요청
 userRouter.get('/:id', function(req, res){
     var targetID = req.params.id;
 
-    let query = {
-        username: targetID
-    };
-    if(targetID == 'all'){query = null;}
-
-    User.find(query, (err,data)=>{
+    User.findById(targetID, (err,data)=>{
         console.log(data);
         res.send(data)
     });
@@ -42,6 +52,7 @@ userRouter.get('/class/tutor', function(req, res){
         User.findOne({username: req.session.username}, async (err, user)=>{
             if(err){
                 console.log('해당하는 유저를 찾을 수 없습니다.');
+                return res.send('fail')
             } 
             //내가 튜터인 강의 리스트 만들기
             let classList = new Array();
@@ -62,6 +73,7 @@ userRouter.get('/class/tutee', function(req, res){
         User.findOne({username: req.session.username}, async (err, user)=>{
             if(err){
                 console.log('해당하는 유저를 찾을 수 없습니다.');
+                return res.send('fail')
             }
             //내가 튜티인 강의 리스트 만들기
             let classList = new Array();

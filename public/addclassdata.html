@@ -4,10 +4,10 @@
     </head>
     <body>
         <h1>AddClassData</h1>
-
         <p>
-            <input id="id" type="text" name="username" placeholder="class name">
+            <input id="id" type="text" name="class name" placeholder="class name">
         </p>
+        <div id="changeclassroom_submit">강의실 변경</div>
 
         <h2>기본정보 입력</h2>
         <form action="/" method="post">
@@ -63,13 +63,31 @@
 
 
         <script>
-            $('#basicinfo_submit').click(()=>{
+            var classID;
+
+            $('#changeclassroom_submit').click(()=>{
                 let className = $('#id').val();
+                $.ajax({
+                    type: "GET",
+                    url: "/class/name/" + className,
+                    dataType: "text",
+                    success: (res)=>{
+                        let data = JSON.parse(res);
+                        classID = data[0]._id;
+                        alert('강의실이 ' + data[0].className + ' - ' + classID + '로 변경됬습니다.');
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
+            $('#basicinfo_submit').click(()=>{
                 let grade = $('#grade').val();
                 let desc = $('#class_desc').val();
                 $.ajax({
                     type: "POST",
-                    url: "/class/" + className + "/basic-info",
+                    url: "/class/" + classID + "/basic-info",
                     data: "grade=" + grade + "&description=" + desc,
                     dataType: "text",
                     success: (res)=>{
@@ -82,12 +100,11 @@
             })
 
             $('#course_submit').click(()=>{
-                let className = $('#id').val();
                 let link = $('#link').val();
                 let desc = $('#course_desc').val();
                 $.ajax({
                     type: "POST",
-                    url: "/class/" + className + "/course",
+                    url: "/class/" + classID + "/course",
                     data: "link=" + link + "&description=" + desc,
                     dataType: "text",
                     success: (res)=>{
@@ -100,12 +117,11 @@
             })
 
             $('#lecturetime_submit').click(()=>{
-                let className = $('#id').val();
                 let startAt = $('#startAt').val();
                 let duration = $('#duration').val();
                 $.ajax({
                     type: "POST",
-                    url: "/class/" + className + "/lecture-time",
+                    url: "/class/" + classID + "/lecture-time",
                     data: "startAt=" + startAt + "&duration=" + duration,
                     dataType: "text",
                     success: (res)=>{
@@ -118,11 +134,10 @@
             })
 
             $('#question_submit').click(()=>{
-                let className = $('#id').val();
                 let question = $('#question').val();
                 $.ajax({
                     type: "POST",
-                    url: "/class/" + className + "/question",
+                    url: "/class/" + classID + "/question",
                     data: "content=" + question,
                     dataType: "text",
                     success: (res)=>{
@@ -135,12 +150,11 @@
             })
 
             $('#answer_submit').click(()=>{
-                let className = $('#id').val();
                 let qid = $('#qid').val();
                 let answer = $('#answer').val();
                 $.ajax({
                     type: "POST",
-                    url: "/class/" + className + "/question/" + qid,
+                    url: "/class/" + classID + "/question/" + qid,
                     data: "content=" + answer,
                     dataType: "text",
                     success: (res)=>{
