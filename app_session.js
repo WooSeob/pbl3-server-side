@@ -2,6 +2,10 @@ var express = require('express');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 
+
+
+
+
 var app = express();
 app.use(session({
     secret: 'a7asd8fas7d7fasdfs7d7f891',
@@ -41,6 +45,9 @@ app.get('/auth/login', function(req, res){
     `;
     res.send(output);
 });
+
+
+
 app.get('/welcome', function(req, res){
     if(req.session.displayName){
         res.send(`
