@@ -13,7 +13,7 @@ const QnA = mongoose.model("QnA", QnASchema);
 const Course = mongoose.model("Course", CourseSchema);
 const ClassBasicInfo = mongoose.model("ClassBasicInfo", ClassBasicInfoSchema);
 const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
-const LectureNote = mongoose.model("LectureNote", LectureTimeSchema);
+const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 
 var classRouter = express.Router();
 
@@ -67,7 +67,7 @@ var classRouter = express.Router();
             3. 최대 튜티수 V
 
             4. 질의응답 V
-            5. 수업노트
+            5. 수업노트 V
             6. 출결관리
 
             7. 스카이프링크
@@ -208,6 +208,20 @@ classRouter.get('/:id/start', (req, res)=>{
                 if(err){console.log(err); return res.send('fail')}
                 res.send('success')
             })
+        })
+    })
+})
+
+//스카이프 링크 추가
+classRouter.post('/:id/skype', (req, res)=>{
+    //@@@ 이 함수는 Class.skypelink에 받아온 스카이프 링크를를 넣는 함숩니다.
+    let targetClassID = req.params.id;
+    let userID = req.session.id
+    let skypeLink = req.body.skypeLink;
+
+    User.isTutorOf(userID, targetClassID, ()=>{
+        Class.addSkypeLink(targetClassID, skypeLink, (errmsg)=>{
+            console.log(errmsg);
         })
     })
 })
@@ -415,12 +429,12 @@ classRouter.get('/:id/join', function(req, res){
             if(joinAllowed){
                 //아직 수강하지 않은경우 -> 수강할 수 있음
                 console.log('수강신청완료')
-                
-                //포인트차감
-                user.point = user.point - targetClass.price;
 
                 targetClass.tutees.push(userObjID);
                 targetClass.save();
+
+                //포인트차감
+                user.point = user.point - targetClass.price;
                 user.classesAsTutee.push(targetClass._id);
                 user.save();
 

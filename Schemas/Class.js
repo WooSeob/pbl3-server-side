@@ -120,7 +120,8 @@ ClassSchema.methods.start = function(next){
 const DATA_TYPE = {
     'Course': ['RealtimeOnlineCourseType', 'OnlineCourseType', 'OfflineType'],
     'LectureTime': ['RealtimeOnlineCourseType', 'QnAType'],
-    'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType']
+    'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType'],
+    'SkypeLink': ['RealtimeOnlineCourseType'],
 }
 ClassSchema.statics.addCourse = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
@@ -159,13 +160,29 @@ ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
         if(err){callback(err);return}
 
         if(DATA_TYPE['MaxTutee'].includes(found.classType)){
-            //강의시간 추가.
+            //최대 튜티 수 추가.
             found.maxTutee = data;
             found.save(()=>{
-                console.log('강의시간 추가성공')
+                console.log('최대 튜티 수 추가성공')
             });
         }else{
-            callback('이 클래스에는 최대 튜티수를 설정 할 수 없습니다.');
+            callback('이 클래스에는 최대 튜티 수를 설정 할 수 없습니다.');
+        }
+    })
+};
+
+ClassSchema.statics.addSkypeLink = function(targetClassID, data, callback){
+    this.findById(targetClassID, (err, found)=>{
+        if(err){callback(err);return}
+
+        if(DATA_TYPE['SkypeLink'].includes(found.classType)){
+            //스카이프링크 추가.
+            found.skypeLink = data;
+            found.save(()=>{
+                console.log('스카이프링크 추가성공')
+            });
+        }else{
+            callback('이 클래스에는 스카이프 링크를 설정 할 수 없습니다.');
         }
     })
 };
