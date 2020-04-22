@@ -194,16 +194,20 @@ classRouter.post('/:id/max-tutee', (req, res)=>{
     })
 })
 
+//강의 시작
 classRouter.get('/:id/start', (req, res)=>{
+    let userID = req.session.id
     let targetClassID = req.params.id;
 
     //TODO 강의 타입별 기본정보가 모두 세팅되지 않으면 수업 시작시키면 안됨!!!!!!!!!!!!!
-    Class.findById(targetClassID, (err, Class)=>{
-        if(err){console.log(err); return res.send('fail')}
-
-        Class.start((err)=>{
+    User.isTutorOf(userID, targetClassID, ()=>{
+        Class.findById(targetClassID, (err, Class)=>{
             if(err){console.log(err); return res.send('fail')}
-            res.send('success')
+    
+            Class.start((err)=>{
+                if(err){console.log(err); return res.send('fail')}
+                res.send('success')
+            })
         })
     })
 })
