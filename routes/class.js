@@ -79,7 +79,7 @@ var classRouter = express.Router();
 classRouter.post('/', function(req, res){
     //튜터 아이디로 수업 생성
     console.log(req.session);
-    User.findById(req.session.id, (err,tutor)=>{
+    User.findById(req.session.uid, (err,tutor)=>{
         if(err){ res.send('fail'); return; }
 
         //기본적으로 강의개설직후는 '튜티모집' 상태
@@ -150,7 +150,7 @@ classRouter.post('/:id/basic-info', (req, res)=>{
 classRouter.post('/:id/course', (req, res)=>{
 //@@@ 이 함수는 받아온 데이터로 course 만들어서 Class.course배열에 계속해서 집어넣는 함숩니다. 
     let targetClassID = req.params.id;
-    let userID = req.session.id
+    let userID = req.session.uid
     var newCourse = new Course({
         description: req.body.description,
         link: req.body.link
@@ -167,7 +167,7 @@ classRouter.post('/:id/course', (req, res)=>{
 classRouter.post('/:id/lecture-time', (req, res)=>{
     //@@@ 이 함수는 받아온 데이터로 LectureTime 만들어서 Class.LectureTime배열에 계속해서 집어넣는 함숩니다. 
     let targetClassID = req.params.id;
-    let userID = req.session.id
+    let userID = req.session.uid
     var newTime = new LectureTime({
         startAt: req.body.startAt,
         duration: req.body.duration
@@ -184,7 +184,7 @@ classRouter.post('/:id/lecture-time', (req, res)=>{
 classRouter.post('/:id/max-tutee', (req, res)=>{
     //@@@ 이 함수는 Class.maxTutee에 받아온 데이터를 넣는 함숩니다.
     let targetClassID = req.params.id;
-    let userID = req.session.id
+    let userID = req.session.uid
     let numMaxTutee = req.body.maxTutee;
 
     User.isTutorOf(userID, targetClassID, ()=>{
@@ -196,11 +196,13 @@ classRouter.post('/:id/max-tutee', (req, res)=>{
 
 //강의 시작
 classRouter.get('/:id/start', (req, res)=>{
-    let userID = req.session.id
+    let userID = req.session.uid
     let targetClassID = req.params.id;
 
     //TODO 강의 타입별 기본정보가 모두 세팅되지 않으면 수업 시작시키면 안됨!!!!!!!!!!!!!
-    User.isTutorOf(userID, targetClassID, ()=>{
+    User.isTutorOf(userID, targetClassID, (err)=>{
+        if(err){console.log(err); return res.send('fail')}
+
         Class.findById(targetClassID, (err, Class)=>{
             if(err){console.log(err); return res.send('fail')}
     
@@ -216,7 +218,7 @@ classRouter.get('/:id/start', (req, res)=>{
 classRouter.post('/:id/skype', (req, res)=>{
     //@@@ 이 함수는 Class.skypelink에 받아온 스카이프 링크를를 넣는 함숩니다.
     let targetClassID = req.params.id;
-    let userID = req.session.id
+    let userID = req.session.uid
     let skypeLink = req.body.skypeLink;
 
     User.isTutorOf(userID, targetClassID, ()=>{
@@ -244,7 +246,7 @@ classRouter.post('/:id/question', (req, res)=>{
     //그 수업의 상태는 수업진행중이어야 한다 ?
     let targetClassID = req.params.id;
     let content = req.body.content;
-    let userID = req.session.id
+    let userID = req.session.uid
 
     User.isTuteeOf(userID, targetClassID, ()=>{
         //질문추가
@@ -272,7 +274,7 @@ classRouter.post('/:id/question/:qid', (req, res)=>{
     let targetClassID = req.params.id;
     let targetQuestion = req.params.qid;
     let content = req.body.content;
-    let userID = req.session.id
+    let userID = req.session.uid
 
     //TODO 권한 없을때 응답 어떻게 해야할지 해결할것
     User.isTutorOf(userID, targetClassID, ()=>{
@@ -307,7 +309,7 @@ classRouter.post('/:id/lecture-note', (req, res)=>{
     //강의노트 작성은 해당 수업의 튜터가 한다.
     //그 수업의 상태는 수업진행중이어야 한다 ?
 
-    let userID = req.session.id
+    let userID = req.session.uid
     let targetClassID = req.params.id;
     let title = req.body.title;
     let content = req.body.content;
@@ -331,7 +333,7 @@ classRouter.post('/:id/lecture-note', (req, res)=>{
 //수업 철회하기
 classRouter.get('/:id/quit', function(req, res){
     let targetClassID = req.params.id;
-    let userID = req.session.id
+    let userID = req.session.uid
 
     if(!userID){
         console.log('로그인 후 이용해 주세요');
@@ -381,9 +383,8 @@ classRouter.get('/:id/quit', function(req, res){
 //수업 참여하기
 classRouter.get('/:id/join', function(req, res){
     let targetClassID = req.params.id;
-    let userID = req.session.id
+    let userID = req.session.uid
 
-    let userObjID;
     if(!userID){
         console.log('로그인 후 이용해 주세요');
         res.send('fail')
@@ -392,6 +393,7 @@ classRouter.get('/:id/join', function(req, res){
     User.findById(userID, async (err, user)=>{
 
         Class.findById(targetClassID , (err, targetClass)=>{
+            if(err){console.log(err); return res.send('fail')}
             let joinAllowed = true;
 
             // 해당 강의가 open되지 않은경우
@@ -408,7 +410,7 @@ classRouter.get('/:id/join', function(req, res){
 
             // user가 이미 해당 강의 튜티인 경우
             for(let tuteeID of targetClass.tutees){
-                if(String(userObjID) == String(tuteeID)){
+                if(String(userID) == String(tuteeID)){
                     console.log('이미 수강중입니다.')
                     joinAllowed = false;
                 }
@@ -430,7 +432,7 @@ classRouter.get('/:id/join', function(req, res){
                 //아직 수강하지 않은경우 -> 수강할 수 있음
                 console.log('수강신청완료')
 
-                targetClass.tutees.push(userObjID);
+                targetClass.tutees.push(userID);
                 targetClass.save();
 
                 //포인트차감

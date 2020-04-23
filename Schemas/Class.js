@@ -99,9 +99,14 @@ ClassSchema.methods.isJoinAllowed = function(){
             return false;
         }
     }
+
 };
 
 ClassSchema.methods.start = function(next){
+    console.log(this)
+    console.log(this.tutees.length)
+    console.log(this.state)
+
     if(this.state == 'Waiting' && this.tutees.length >= MIN_TUTEE){
         this.state = 'InProgress'
         this.save(()=>{

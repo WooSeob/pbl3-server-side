@@ -48,8 +48,8 @@ userRouter.get('/:id', function(req, res){
 
 //내가 튜터인 클래스들 받아오기
 userRouter.get('/class/tutor', function(req, res){
-    if(req.session.username){
-        User.findOne({username: req.session.username}, async (err, user)=>{
+    if(req.session.uid){
+        User.findById(req.session.uid, async (err, user)=>{
             if(err){
                 console.log('해당하는 유저를 찾을 수 없습니다.');
                 return res.send('fail')
@@ -69,8 +69,8 @@ userRouter.get('/class/tutor', function(req, res){
 
 //내가 튜티인 클래스들 받아오기
 userRouter.get('/class/tutee', function(req, res){
-    if(req.session.username){
-        User.findOne({username: req.session.username}, async (err, user)=>{
+    if(req.session.uid){
+        User.findById(req.session.uid, async (err, user)=>{
             if(err){
                 console.log('해당하는 유저를 찾을 수 없습니다.');
                 return res.send('fail')

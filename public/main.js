@@ -64,7 +64,7 @@ function loadMyClasses(){
                 // 로드 성공
                 let list = '';
                 for(let c of res){
-                    list = list + `<li>${c.className} - ${c.tutor} <a href="/class/${c.className}/quit">수강철회</a></li>`
+                    list = list + `<li>${c.className} - ${c.tutor} <a href="/class/${c._id}/quit">수강철회</a></li>`
                 }
                 $('.asTutee ul').append(list);
             }
@@ -85,7 +85,7 @@ function loadAllClasses(){
                 // 로드 성공
                 let list = '';
                 for(let c of res){
-                    list = list + `<li>${c.className} (${c.tutor}) - <a href="/class/${c.className}/join">수강하기</a></li>`
+                    list = list + `<li>${c.className} (${c.tutor}) - <a href="/class/${c._id}/join">수강하기</a></li>`
                 }
                 $('.all ul').append(list);
             }

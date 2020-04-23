@@ -19,8 +19,7 @@ router.post('/login', function(req, res){
         console.log(user);
         if(pwd == user.password){
             //로그인 성공
-            req.session.username = user.username;
-            req.session.id = user._id;
+            req.session.uid = user._id;
             req.session.save(()=>{
                 console.log(req.session);
                 console.log('로그인 성공.');
@@ -34,7 +33,7 @@ router.post('/login', function(req, res){
 
 //로그아웃
 router.get('/logout', function(req, res){
-    delete req.session.username;
+    delete req.session.uid;
     req.session.save(()=>{
         console.log(req.session);
         console.log('로그아웃 됬습니다.');
@@ -46,10 +45,10 @@ router.get('/logout', function(req, res){
 router.get('/isAuthenticated', function(req, res){
     //로그인 되있으면 유저정보 응답
     //로그인 안되있으면 'fail' 응답
-    if(req.session.username){
-        User.findOne({username: req.session.username}, (err, user)=>{
+    if(req.session.uid){
+        User.findById(req.session.uid, (err, user)=>{
             if(err){
-                console.log(req.session.username + '에 해당하는 유저를 찾을 수 없습니다.');
+                console.log(req.session.uid + '에 해당하는 유저를 찾을 수 없습니다.');
             }
             res.send(user.toJSON());
         });

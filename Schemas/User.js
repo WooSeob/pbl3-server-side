@@ -30,18 +30,20 @@ const UserSchema = new mongoose.Schema({
     모델 = mongoose.model("모델명", 스키마)
     스키마로 모델을 만든다
 */
+
 UserSchema.statics.isTutorOf = function(userID, ClassID, next){
     this.findById(userID)
     .then((user)=>{
         console.log('found')
         if(user.classesAsTutor.includes(ClassID)){
-            next();
+            next(null);
         }else{
             console.log('해당 강의의 튜터가 아닙니다.')
         }
     })
     .catch((err)=>{
-        console.log(err)
+        next(userID + '를 찾지 못했습니다.')
+        //console.log(err)
     })
 };
 
@@ -50,13 +52,14 @@ UserSchema.statics.isTuteeOf = function(userID, ClassID, next){
     .then((user)=>{
         console.log('found')
         if(user.classesAsTutee.includes(ClassID)){
-            next();
+            next(null);
         }else{
             console.log('해당 강의의 튜티가 아닙니다.')
         }
     })
     .catch((err)=>{
-        console.log(err)
+        next(userID + '를 찾지 못했습니다.')
+        //console.log(err)
     })
 };
 
