@@ -15,7 +15,7 @@ const ClassSchema = new mongoose.Schema({
     //튜터 : User
     state: {
         type: String,
-        enum: ['Waiting', 'InProgress', 'Ended']
+        enum: ['Prepare', 'Waiting', 'InProgress', 'Ended']
     },
     tutor: {
         type: mongoose.Schema.Types.ObjectId,
@@ -102,17 +102,18 @@ ClassSchema.methods.isJoinAllowed = function(){
 
 };
 
+
+
 ClassSchema.methods.start = function(next){
-    console.log(this)
-    console.log(this.tutees.length)
-    console.log(this.state)
 
     if(this.state == 'Waiting' && this.tutees.length >= MIN_TUTEE){
+
         this.state = 'InProgress'
-        this.save(()=>{
-            console.log(this._id + ' 강의시작');
-            next(null);
-        })
+            this.save(()=>{
+                console.log(this._id + ' 강의시작');
+                next(null);
+            })
+        
     }else{
         next('강의를 시작 할 수 없습니다.');
     }
@@ -128,6 +129,41 @@ const DATA_TYPE = {
     'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType'],
     'SkypeLink': ['RealtimeOnlineCourseType'],
 }
+
+const IS_DATA_PREPARED = {
+    'RealtimeOnlineCourseType': function(Class){
+        // 기본정보 + 강의시간 + 커리큘럼 + 최대튜티수
+        return Class.basicInfo && Class.lectureTime.length > 0 && Class.course.length > 0 && Class.maxTutee
+    },
+    'OnlineCourseType': function(Class){
+        // 기본정보 + 커리큘럼
+        return Class.basicInfo && Class.coures.length > 0
+    },
+    'QnAType': function(Class){
+        // 기본정보 + 강의시간
+        return Class.basicInfo && Class.lectureTime > 0
+    },
+    'OfflineType': function(Class){
+        // 기본정보 + 강의시간 + 최대튜티수
+        return Class.basicInfo  && Class.lectureTime.length > 0 && Class.maxTutee
+    }
+}
+
+function checkPrepared(Class){
+    if(Class.state == 'Prepare'){
+        if(IS_DATA_PREPARED[Class.classType](Class)){
+            Class.state = 'Waiting'
+            Class.save(()=>{
+                console.log('state changed')
+            })
+        }else{
+            console.log('데이터가 모두 준비되지 않았습니다.')
+        }
+    }else{
+        console.log('수업 상태가 Prepare가 아닙니다.')
+    }
+}
+
 ClassSchema.statics.addCourse = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
@@ -137,6 +173,7 @@ ClassSchema.statics.addCourse = function(targetClassID, data, callback){
             found.course.push(data);
             found.save(()=>{
                 console.log('커리큘럼 추가성공')
+                checkPrepared(found);
             });
         }else{
             callback('이 클래스에는 커리큘럼을 추가 할 수 없습니다.');
@@ -153,6 +190,7 @@ ClassSchema.statics.addLectureTime = function(targetClassID, data, callback){
             found.lectureTime.push(data);
             found.save(()=>{
                 console.log('강의시간 추가성공')
+                checkPrepared(found);
             });
         }else{
             callback('이 클래스에는 강의시간을 추가 할 수 없습니다.');
@@ -169,6 +207,7 @@ ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
             found.maxTutee = data;
             found.save(()=>{
                 console.log('최대 튜티 수 추가성공')
+                checkPrepared(found);
             });
         }else{
             callback('이 클래스에는 최대 튜티 수를 설정 할 수 없습니다.');

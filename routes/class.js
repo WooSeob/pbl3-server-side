@@ -83,7 +83,7 @@ classRouter.post('/', function(req, res){
         if(err){ res.send('fail'); return; }
 
         //기본적으로 강의개설직후는 '튜티모집' 상태
-        let state = 'Waiting';
+        let state = 'Prepare';
         if(req.body.classType == 'OnlineCourseType'){
             state = 'InProgress';
         }
@@ -97,12 +97,13 @@ classRouter.post('/', function(req, res){
             tutor: tutor._id,
             state: state
         });
-        newClass.save();
-
-        //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
-        tutor.classesAsTutor.push(newClass._id);
-        tutor.save();
-        res.send('success');
+        newClass.save(()=>{
+            //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
+            tutor.classesAsTutor.push(newClass._id);
+            tutor.save(()=>{
+                res.send(newClass._id);
+            });
+        });
     });
 })
 
@@ -210,6 +211,27 @@ classRouter.get('/:id/start', (req, res)=>{
                 if(err){console.log(err); return res.send('fail')}
                 res.send('success')
             })
+        })
+    })
+})
+//강의 시작
+classRouter.get('/:id/test', (req, res)=>{
+    let userID = req.session.uid
+    let targetClassID = req.params.id;
+
+    //TODO 강의 타입별 기본정보가 모두 세팅되지 않으면 수업 시작시키면 안됨!!!!!!!!!!!!!
+    User.isTutorOf(userID, targetClassID, (err)=>{
+        if(err){console.log(err); return res.send('fail')}
+
+        Class.findById(targetClassID, (err, Class)=>{
+            if(err){console.log(err); return res.send('fail')}
+    
+            console.log(Class.maxTutee);
+            if(Class.maxTutee){
+                console.log('if true')
+            }else{
+                console.log('if false')
+            }
         })
     })
 })
