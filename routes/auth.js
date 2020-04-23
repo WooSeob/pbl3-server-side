@@ -2,6 +2,8 @@ var express = require('express');
 //var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
 var router = express.Router();
+const smtpTransport = require('nodemailer-smtp-transport');
+const nodemailer = require('nodemailer');
 
 // TODO 비밀번호 암호화 할것
 // 로그인
@@ -56,5 +58,86 @@ router.get('/isAuthenticated', function(req, res){
     }
 })
 
+var randomNumber
+// 회원가입 페이지에서 인증번호 발송 요청
+// 사용자 유저 이메일주소 받아오기
+router.post('/send-email', function(req, res){
+
+    //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
+    if(req.body.email === '') {
+      res.send(
+        `<script type="text/javascript">
+          alert("메일주소를 입력해주세요."); 
+          window.location = 'http://localhost:8080'; 
+      </script>`);
+    }
+    
+    let userEmail = (req.body.email+'@hknu.ac.kr');
+       
+    console.log("\nemail :", userEmail);
+    
+    //메일 보내는 Function - sendMail
+    randomNumber = sendMail(userEmail);
+    res.send('<script type="text/javascript">alert("메일 발송했습니다.");</script>');
+
+  });
+  
+  // auth라우터에서 라우팅
+  // 인증번호 검증
+router.post('/auth-email', function(req, res){
+    let authNum = req.body.authNum;
+  
+    console.log('인증번호(User)  :   '+ authNum);
+  
+    //인증 여부 alert으로 알려줌
+  
+    if(authNum == randomNumber){
+        console.log('인증성공')
+        res.send('<script type="text/javascript">alert("인증 성공했습니다!");</script>');
+    } else{
+        res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
+    }
+});  
+  
+  
+  //얘는 그냥 함수
+  /* 이메일 보내는 함수 */
+function sendMail(email){
+  
+    // 메일 인증번호 랜덤하게 발생 시키기 (100000~999999)  
+    function randomNum(min, max){
+      return Math.floor(Math.random() * (max-min)) + min;
+    }
+    randomNumber = randomNum(100000,999999);
+  
+      // 이메일 기본 설정 
+      var transporter = nodemailer.createTransport(smtpTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        auth: {
+          user: 'tutor2tutee@gmail.com',
+          pass: 'ansgovm3!'
+        }
+      }));
+      
+      //이메일 형식 
+      var mailOptions = {
+        from: 'tutor2tutee@gmail.com',
+        to: email,
+        subject: 'Tutor2Tutee를 회원가입을 위한 메일 입니다.',
+        text: '인증번호 ['+randomNumber+']을 입력해주세요! 감사합니다.'
+      };
+      
+      // 이메일 보내기 
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent complete! : ' + info.response);
+          console.log('인증번호(System): ' + randomNumber)
+        }
+      });
+      return randomNumber;
+  }
 
 module.exports = router;

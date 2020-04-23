@@ -1,30 +1,74 @@
 <HTML>
     <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
     </head>
     <body>
         <h1>Register</h1>
 
         <form action="/user/register" method="post">
-        <p>
-            <input type="text" name="username" placeholder="username">
-        </p>
-        <p>
-            <input type="text" name="password" placeholder="password">
-        </p>
-        <p>
-            <input type="text" name="nickname" placeholder="nickname">
-        </p>
-        <p>
-            <input type="text" name="webmail" placeholder="webmail">
-        </p>
-        <p>
-            <input type="textarea" name="description" placeholder="description">
-        </p>
-        <p>
-            <input type="submit">
-        </p>
-    </form>
+            <p>
+                <input type="text" name="username" placeholder="username">
+            </p>
+            <p>
+                <input type="text" name="password" placeholder="password">
+            </p>
+            <p>
+                <input type="text" name="nickname" placeholder="nickname">
+            </p>
+            <p>
+                <input id="webmail" type="text" name="webmail" placeholder="webmail">
+            </p>
+            <p>
+                <input id="authnum" type="text" name="authnum" placeholder="auth number">
+            </p>
+            <p>
+                <input type="textarea" name="description" placeholder="description">
+            </p>
+            <p>
+                <input type="submit">
+            </p>
+
+            <div id="btn_req_auth">인증번호 요청</div>
+
+            <div id="btn_auth">인증</div>
+
+            <script>
+                $('#btn_req_auth').click(()=>{
+                let mail = $('#webmail').val();
+                console.log(mail)
+                $.ajax({
+                        type: "POST",
+                        url: "/auth/send-email",
+                        data: "email=" + mail,
+                        dataType: "text",
+                        success: (res)=>{
+                            console.log(res)
+                        },
+                        error: (xhr, status, responseTxt)=>{
+                            console.log(xhr);
+                        }
+                    })
+                })
+
+                $('#btn_auth').click(()=>{
+                let authNum = $('#authnum').val();
+
+                $.ajax({
+                        type: "POST",
+                        url: "/auth/auth-email",
+                        data: "authNum=" + authNum,
+                        dataType: "text",
+                        success: (res)=>{
+            
+                        },
+                        error: (xhr, status, responseTxt)=>{
+                            console.log(xhr);
+                        }
+                    })
+                })
+            </script>
+        </form>
     </body>
     
 </HTML>
