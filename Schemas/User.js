@@ -34,7 +34,6 @@ const UserSchema = new mongoose.Schema({
 UserSchema.statics.isTutorOf = function(userID, ClassID, next){
     this.findById(userID)
     .then((user)=>{
-        console.log('found')
         if(user.classesAsTutor.includes(ClassID)){
             next(null);
         }else{
@@ -50,7 +49,6 @@ UserSchema.statics.isTutorOf = function(userID, ClassID, next){
 UserSchema.statics.isTuteeOf = function(userID, ClassID, next){
     this.findById(userID)
     .then((user)=>{
-        console.log('found')
         if(user.classesAsTutee.includes(ClassID)){
             next(null);
         }else{

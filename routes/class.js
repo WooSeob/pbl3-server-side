@@ -3,6 +3,9 @@ var mongoose = require('mongoose');
 var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
 
+const ClassConst = require('../Const/Class')
+var ClassStateManager = require('../Controller/ClassStateManager')
+
 var QnASchema = require('../Schemas/QnA')
 var ClassBasicInfoSchema = require('../Schemas/ClassBasicInfo')
 var CourseSchema = require('../Schemas/Course')
@@ -82,12 +85,7 @@ classRouter.post('/', function(req, res){
     User.findById(req.session.uid, (err,tutor)=>{
         if(err){ res.send('fail'); return; }
 
-        //기본적으로 강의개설직후는 '튜티모집' 상태
-        let state = 'Prepare';
-        if(req.body.classType == 'OnlineCourseType'){
-            state = 'InProgress';
-        }
-
+        //기본적으로 강의개설직후는 '준비중' 상태
         var newClass = new Class({
             classType: req.body.classType,
             category: req.body.category,
@@ -95,7 +93,7 @@ classRouter.post('/', function(req, res){
             className: req.body.className,
             price: req.body.price,
             tutor: tutor._id,
-            state: state
+            state: ClassConst.state.PREPARE
         });
         newClass.save(()=>{
             //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
@@ -143,6 +141,7 @@ classRouter.post('/:id/basic-info', (req, res)=>{
     })
     Class.findByIdAndUpdate(targetClassID, {basicInfo: info}, (err, found)=>{
         if(err){console.log(err)}
+        ClassStateManager.checkPrepared(found)
         res.send(found);
     });
 })
@@ -207,31 +206,10 @@ classRouter.get('/:id/start', (req, res)=>{
         Class.findById(targetClassID, (err, Class)=>{
             if(err){console.log(err); return res.send('fail')}
     
-            Class.start((err)=>{
+            ClassStateManager.startLecture(Class, (err)=>{
                 if(err){console.log(err); return res.send('fail')}
                 res.send('success')
             })
-        })
-    })
-})
-//강의 시작
-classRouter.get('/:id/test', (req, res)=>{
-    let userID = req.session.uid
-    let targetClassID = req.params.id;
-
-    //TODO 강의 타입별 기본정보가 모두 세팅되지 않으면 수업 시작시키면 안됨!!!!!!!!!!!!!
-    User.isTutorOf(userID, targetClassID, (err)=>{
-        if(err){console.log(err); return res.send('fail')}
-
-        Class.findById(targetClassID, (err, Class)=>{
-            if(err){console.log(err); return res.send('fail')}
-    
-            console.log(Class.maxTutee);
-            if(Class.maxTutee){
-                console.log('if true')
-            }else{
-                console.log('if false')
-            }
         })
     })
 })
@@ -376,7 +354,6 @@ classRouter.get('/:id/quit', function(req, res){
             for(let tuteeID of targetClass.tutees){
                 if(String(userID) == String(tuteeID)){
                     targetClass.tutees.pull(user._id);
-                    targetClass.save()
                     console.log('user : ' + user._id + ' 삭제 from class')
                     isDeleted = true;
                 }
@@ -385,7 +362,6 @@ classRouter.get('/:id/quit', function(req, res){
             for(let classID of user.classesAsTutee){
                 if(String(targetClass._id) == String(classID)){
                     user.classesAsTutee.pull(targetClass._id)
-                    user.save()
                     console.log('class : ' + targetClass._id + ' 삭제 from user')
                     isDeleted = true;
                 }
@@ -393,11 +369,19 @@ classRouter.get('/:id/quit', function(req, res){
 
             if(isDeleted){
                 //삭제성공
+                if(targetClass.state == ClassConst.state.JOIN_ABLE){
+                    //강의시작전에 수강취소한경우 포인트환불
+                    user.point = user.point + targetClass.price;
+                }
                 res.redirect('/');
             }else{
                 //삭제실패
                 res.send('fail')
-            }  
+            } 
+
+            //변동사항 저장
+            targetClass.save()
+            user.save()
         });
     })
 })
@@ -418,9 +402,8 @@ classRouter.get('/:id/join', function(req, res){
             if(err){console.log(err); return res.send('fail')}
             let joinAllowed = true;
 
-            // 해당 강의가 open되지 않은경우
+            // 해당 강의가 open되지 않은경우 or 정원초과
             if(!targetClass.isJoinAllowed()){
-                console.log('이미 진행중이거나 폐강된 강의임')
                 joinAllowed = false;
             }
 
@@ -437,16 +420,10 @@ classRouter.get('/:id/join', function(req, res){
                     joinAllowed = false;
                 }
             }
-            
-            //정원 초과시 수강신청 못함
-            if(targetClass.classType == 'RealtimeOnlineCourseType' 
-                || targetClass.classType == 'OfflineType' 
-                && targetClass.tutees.length >= targetClass.maxTutee){
-                    joinAllowed = false;
-            }
 
             //포인트 없으면 수강신청 못함
             if(user.point < targetClass.price){
+                console.log('포인트가 부족합니다.')
                 joinAllowed = false;
             }
 

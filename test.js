@@ -19,6 +19,14 @@ const test1 = {
                 }
             }
         })
+    },
+    increasePoint : function(uid, point){
+        User.findById(uid, (err, found)=>{
+            found.point = found.point + point
+            found.save(()=>{
+                console.log('포인트 증가 성공');
+            })
+        })
     }
 }
 
