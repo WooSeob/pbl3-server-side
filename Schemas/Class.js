@@ -106,12 +106,12 @@ ClassSchema.methods.isJoinAllowed = function(){
     }
 };
 
-ClassSchema.methods.addClassData = async function(targetDataType, Data, Callback){
+ClassSchema.methods.addClassData = function(targetDataType, Data, Callback){
     if(ClassDataChecker.isAccessible(targetDataType, this.classType)){
         //다큐먼트에 데이터 추가 추가.
-        await addClassDataByClassType(targetDataType, this, Data)
+        addClassDataByClassType(targetDataType, this, Data)
     }else{
-        await Callback('이 클래스에는 ' + targetDataType + '을 추가 할 수 없습니다.');
+        Callback('이 클래스에는 ' + targetDataType + '을 추가 할 수 없습니다.');
     }
 }
 
@@ -131,52 +131,10 @@ ClassSchema.statics.addClassData = function(targetDataType, targetClassID, Data,
     })
 }
 
-const ADD_FUNCTIONS_FOR_TYPE = {
-    'BasicInfo': async function(Class, Data){
-        Class.basicInfo = Data;
-        await Class.save( async ()=>{
-            await console.log('기본정보 추가성공')
-        });
-    },
-    'Course': async function(Class, Data){
-        Class.course.push(Data);
-        await Class.save(async ()=>{
-            await console.log('커리큘럼 추가성공')
-        });
-    },
-    'LectureTime': async function(Class, Data){
-        Class.lectureTime.push(Data);
-        await Class.save(async ()=>{
-            await console.log('강의시간 추가성공')
-        });
-    },
-    'MaxTutee': async function(Class, Data){
-        Class.maxTutee = Data;
-        await Class.save(async ()=>{
-            await console.log('최대 튜티 수 추가성공')
-        });
-    },
-    'SkypeLink': async function(Class, Data){
-        Class.skypeLink = Data;
-        await Class.save(async ()=>{
-            await console.log('스카이프링크 추가성공')
-        });
-    },
-    'Place': async function(Class, Data){
-        Class.place = Data;
-        await Class.save(async ()=>{
-            await console.log('수업장소 추가성공')
-        });
-    }
+function addClassDataByClassType(dataType, Class, Data){
+    ClassDataChecker.ADD_FUNCTIONS_FOR_TYPE[dataType](Class, Data)
+    ClassStateManager.checkPrepared(Class)
 }
-
-async function addClassDataByClassType(dataType, Class, Data){
-    await ADD_FUNCTIONS_FOR_TYPE[dataType](Class, Data)
-    await ClassStateManager.checkPrepared(Class)
-}
-
-
-
 
 
 const Class = mongoose.model("Class", ClassSchema);
