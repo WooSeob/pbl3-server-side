@@ -6,16 +6,16 @@ const Manager = {
         //강의 준비완료됬는지 확인하기
         //Prepare -> Joinable
         if(Class.state == ClassConst.state.PREPARE){
-            if(DataChecker.isDataPrepared[Class.classType](Class)){
+            if(DataChecker.isDataPrepared(Class)){
                 Class.state = ClassConst.state.JOIN_ABLE
                 Class.save(()=>{
                     console.log(Class._id + ' : state changed (Prepare -> Joinable)')
                 })
             }else{
-                console.log('데이터가 모두 준비되지 않았습니다.')
+                console.log('StateManager : 데이터가 모두 준비되지 않았습니다.')
             }
         }else{
-            console.log('수업 상태가 Prepare가 아닙니다.')
+            console.log('StateManager : 수업 상태가 Prepare가 아닙니다.')
         }
     },
     startLecture: function(Class, next){
