@@ -73,7 +73,7 @@ router.post('/send-email', function(req, res){
     }
     
     let userEmail = (req.body.email+'@hknu.ac.kr');
-       
+
     console.log("\nemail :", userEmail);
     
     //메일 보내는 Function - sendMail
@@ -99,10 +99,17 @@ router.post('/auth-email', function(req, res){
     }
 });  
 
+function insertInfo() {
+  console.log('이메일과 인증번호를 저장함..')
+
+}
+
+
 // 발급된 인증번호를 3분후에 삭제 -> 3분 타이머
-function deleteAuthnum() {
+function deleteInfo() {
   console.log('this is test for delete authnum in DB with 3minutes!');
 }
+
   
   // 얘는 그냥 함수
   /* 이메일 보내는 함수 */
@@ -143,8 +150,10 @@ function sendMail(email){
         }
       });
 
+      
       // setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min
-      setTimeout(deleteAuthnum, 180000); 
+      setTimeout(insertInfo, 1500);
+      setTimeout(deleteInfo, 180000); 
 
       return randomNumber;
   }
