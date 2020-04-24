@@ -42,6 +42,14 @@
         </form>
         <div id="lecturetime_submit">submit</div>
 
+        <h2>최대 튜티수 설정</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="maxTutee" type="text" name="maxTutee" placeholder="maxTutee">
+            </p>
+        </form>
+        <div id="maxTutee_submit">submit</div>
+
         <h2>질문 추가</h2>
         <form action="/" method="post">
             <p>
@@ -165,6 +173,24 @@
                     }
                 })
             })
+            
+
+            $('#maxTutee_submit').click(()=>{
+                let maxTutee = $('#maxTutee').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + classID + "/max-tutee/",
+                    data: "maxTutee=" + maxTutee,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
         </script>
     </body>
     

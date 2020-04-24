@@ -5,7 +5,8 @@ var QnA = require('./QnA');
 var Course = require('./Course');
 var LectureTime = require('./LectureTime');
 
-const MIN_TUTEE = 2;
+var ClassStateManager = require('../Controller/ClassStateManager')
+var ClassDataChecker = require('../Controller/DataChecker')
 
 const ParticipationSchema = new mongoose.Schema({
     
@@ -15,7 +16,7 @@ const ClassSchema = new mongoose.Schema({
     //튜터 : User
     state: {
         type: String,
-        enum: ['Waiting', 'InProgress', 'Ended']
+        enum: ['Prepare', 'Joinable', 'InProgress', 'Ended']
     },
     tutor: {
         type: mongoose.Schema.Types.ObjectId,
@@ -86,35 +87,20 @@ const ClassSchema = new mongoose.Schema({
     Class 다큐먼트가 호출하는 메서드
 */
 ClassSchema.methods.isJoinAllowed = function(){
-    if(this.classType == 'OnlineCourseType'){
-        if(this.state == 'InProgress'){
-            return true;
+    if(this.state == 'Joinable'){
+        if(this.maxTutee){
+            if(this.tutees.length < this.maxTutee){
+                return true
+            }else{
+                console.log('강의의 정원이 초과되서 참여 할 수 없습니다.')
+                return false
+            }
         }else{
-            return false;
+            return true
         }
     }else{
-        if(this.state == 'Waiting'){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-};
-
-ClassSchema.methods.start = function(next){
-    console.log(this)
-    console.log(this.tutees.length)
-    console.log(this.state)
-
-    if(this.state == 'Waiting' && this.tutees.length >= MIN_TUTEE){
-        this.state = 'InProgress'
-        this.save(()=>{
-            console.log(this._id + ' 강의시작');
-            next(null);
-        })
-    }else{
-        next('강의를 시작 할 수 없습니다.');
+        console.log('강의가 open되지 않았거나 이미 진행중입니다.')
+        return false
     }
 };
 
@@ -122,21 +108,16 @@ ClassSchema.methods.start = function(next){
 /*
     Class 모델이 호출하는 메서드
 */
-const DATA_TYPE = {
-    'Course': ['RealtimeOnlineCourseType', 'OnlineCourseType', 'OfflineType'],
-    'LectureTime': ['RealtimeOnlineCourseType', 'QnAType'],
-    'MaxTutee': ['RealtimeOnlineCourseType', 'OfflineType'],
-    'SkypeLink': ['RealtimeOnlineCourseType'],
-}
 ClassSchema.statics.addCourse = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
 
-        if(DATA_TYPE['Course'].includes(found.classType)){
+        if(ClassDataChecker.isAccessible('Course', found.classType)){
             //커리큘럼 추가.
             found.course.push(data);
             found.save(()=>{
                 console.log('커리큘럼 추가성공')
+                ClassStateManager.checkPrepared(found)
             });
         }else{
             callback('이 클래스에는 커리큘럼을 추가 할 수 없습니다.');
@@ -148,11 +129,12 @@ ClassSchema.statics.addLectureTime = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
 
-        if(DATA_TYPE['LectureTime'].includes(found.classType)){
+        if(ClassDataChecker.isAccessible('LectureTime', found.classType)){
             //강의시간 추가.
             found.lectureTime.push(data);
             found.save(()=>{
                 console.log('강의시간 추가성공')
+                ClassStateManager.checkPrepared(found)
             });
         }else{
             callback('이 클래스에는 강의시간을 추가 할 수 없습니다.');
@@ -164,11 +146,12 @@ ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
 
-        if(DATA_TYPE['MaxTutee'].includes(found.classType)){
+        if(ClassDataChecker.isAccessible('MaxTutee', found.classType)){
             //최대 튜티 수 추가.
             found.maxTutee = data;
             found.save(()=>{
                 console.log('최대 튜티 수 추가성공')
+                ClassStateManager.checkPrepared(found)
             });
         }else{
             callback('이 클래스에는 최대 튜티 수를 설정 할 수 없습니다.');
@@ -179,8 +162,8 @@ ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
 ClassSchema.statics.addSkypeLink = function(targetClassID, data, callback){
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
-
-        if(DATA_TYPE['SkypeLink'].includes(found.classType)){
+        
+        if(ClassDataChecker.isAccessible('SkypeLink', found.classType)){
             //스카이프링크 추가.
             found.skypeLink = data;
             found.save(()=>{

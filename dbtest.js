@@ -9,6 +9,9 @@ var classRouter = require('./routes/class');
 var authRouter = require('./routes/auth');
 var userRouter = require('./routes/user');
 
+//테스트모듈
+var test = require('./test');
+
 var app = new express();
 
 //CORS setting
@@ -20,10 +23,9 @@ app.use('/js', express.static('./static/js'));
 
 const cookieStore = mongoStore(session);
 
+//--------------------------------- 메인로직 -----------------------------
 
 // DB 연결
-//http://172.30.1.7/
-
 mongoose.connect('mongodb://localhost:27017/test',{
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -48,6 +50,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use('/class', classRouter);
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
+
+//테스팅
+test.increasePoint('5e940910ecc5c844f02c2fda', 4000);
 
 app.get('/', function(req, res){
     res.send('<h1>Hello home page</h1>');
