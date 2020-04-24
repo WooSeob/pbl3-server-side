@@ -1,10 +1,15 @@
 var express = require('express');
 //var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
-var MailAuth = require('../Schemas/MailAuth');
+var mongoose = require('mongoose');
 var router = express.Router();
 const smtpTransport = require('nodemailer-smtp-transport');
 const nodemailer = require('nodemailer');
+
+var MailAuth = require('../Schemas/MailAuth');
+var AuthMail = mongoose.model("MailAuth", MailAuth);
+
+
 
 // TODO 비밀번호 암호화 할것
 // 로그인
@@ -97,11 +102,21 @@ router.post('/auth-email', function(req, res){
     } else{
         res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
     }
-});  
+});
 
-function insertInfo() {
-  console.log('이메일과 인증번호를 저장함..')
+// 발급된 인증번호와 사용자 메일 주소를 디비에 저장..
+function insertInfo(email, randomNumber) {
+  var mailAuthInfo = new AuthMail({
+    webmail : email,
+    authNum : randomNumber 
+  });
 
+  mailAuthInfo.save(function(err){
+    if(err){
+      return err;
+    }
+  });
+  console.log("이게 잘 뜬다면 아마도 이메일과 인증번호는 정상적으로 들어갔을거야..");
 }
 
 
@@ -152,7 +167,7 @@ function sendMail(email){
 
       
       // setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min
-      setTimeout(insertInfo, 1500);
+      setTimeout(insertInfo(email, randomNumber), 1500);
       setTimeout(deleteInfo, 180000); 
 
       return randomNumber;
