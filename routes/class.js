@@ -101,8 +101,7 @@ classRouter.post('/', function(req, res){
             state: ClassConst.state.PREPARE
         });
 
-        newClass.save( async ()=>{
-            let TaskQueue = new Array()
+        newClass.save(()=>{
 
             //기본정보
             if(req.body.grade && req.body.class_description){
@@ -110,13 +109,13 @@ classRouter.post('/', function(req, res){
                     grade: req.body.grade,
                     description: req.body.class_description
                 })
-                TaskQueue.push({
-                    type: 'BasicInfo',
-                    data: basicInfo
-                })
-                // newClass.addClassData('BasicInfo', basicInfo, (errmsg)=>{
-                //     console.log(errmsg)
+                // TaskQueue.push({
+                //     type: 'BasicInfo',
+                //     data: basicInfo
                 // })
+                newClass.addClassData('BasicInfo', basicInfo, (errmsg)=>{
+                    console.log(errmsg)
+                })
             }
 
             //커리큘럼 데이터 있으면 추가
@@ -125,13 +124,13 @@ classRouter.post('/', function(req, res){
                     description: req.body.course_description,
                     link: req.body.course_link
                 })
-                TaskQueue.push({
-                    type: 'Course',
-                    data: newCourse
-                })
-                // newClass.addClassData('Course', newCourse, (errmsg)=>{
-                //     console.log(errmsg)
+                // TaskQueue.push({
+                //     type: 'Course',
+                //     data: newCourse
                 // })
+                newClass.addClassData('Course', newCourse, (errmsg)=>{
+                    console.log(errmsg)
+                })
             }
             
             //강의시간 데이터 있으면 추가
@@ -141,54 +140,48 @@ classRouter.post('/', function(req, res){
                     start: req.body.time_start,
                     finish: req.body.time_finish
                 })
-                TaskQueue.push({
-                    type: 'LectureTime',
-                    data: newTime
-                })
-                // newClass.addClassData('LectureTime', newTime, (errmsg)=>{
-                //     console.log(errmsg)
+                // TaskQueue.push({
+                //     type: 'LectureTime',
+                //     data: newTime
                 // })
+                newClass.addClassData('LectureTime', newTime, (errmsg)=>{
+                    console.log(errmsg)
+                })
             }
 
             //최대튜티수 데이터 있으면 추가
             if(req.body.maxTutee){
-                TaskQueue.push({
-                    type: 'MaxTutee',
-                    data: req.body.maxTutee
-                })
-                // newClass.addClassData('MaxTutee', req.body.maxTutee, (errmsg)=>{
-                //     console.log(errmsg)
+                // TaskQueue.push({
+                //     type: 'MaxTutee',
+                //     data: req.body.maxTutee
                 // })
+                newClass.addClassData('MaxTutee', req.body.maxTutee, (errmsg)=>{
+                    console.log(errmsg)
+                })
             }
 
             //스카이프링크 데이터 있으면 추가
             if(req.body.skypeLink){
-                TaskQueue.push({
-                    type: 'SkypeLink',
-                    data: req.body.skypeLink
-                })
-                // newClass.addClassData('SkypeLink', req.body.skypeLink, (errmsg)=>{
-                //     console.log(errmsg)
+                // TaskQueue.push({
+                //     type: 'SkypeLink',
+                //     data: req.body.skypeLink
                 // })
+                newClass.addClassData('SkypeLink', req.body.skypeLink, (errmsg)=>{
+                    console.log(errmsg)
+                })
             }
             
             //수업장소 데이터 있으면 추가
             if(req.body.place){
-                TaskQueue.push({
-                    type: 'Place',
-                    data: req.body.place
-                })
-                // newClass.addClassData('Place', req.body.place, (errmsg)=>{
-                //     console.log(errmsg)
+                // TaskQueue.push({
+                //     type: 'Place',
+                //     data: req.body.place
                 // })
-            }
-
-            for(let task of TaskQueue){
-                console.log('# ' + task.type + ' 호출')
-                await newClass.addClassData(task.type, task.data, (errmsg)=>{
+                newClass.addClassData('Place', req.body.place, (errmsg)=>{
                     console.log(errmsg)
                 })
             }
+
             //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
             tutor.classesAsTutor.push(newClass._id);
             tutor.save(()=>{

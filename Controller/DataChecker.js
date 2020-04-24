@@ -29,6 +29,45 @@ const DATA_TYPE = {
     'Place': ['OfflineType']
 }
 
+const ADD_FUNCTIONS_FOR_TYPE = {
+    'BasicInfo': function(Class, Data){
+        Class.basicInfo = Data;
+        Class.save( ()=>{
+            console.log('기본정보 추가성공')
+        });
+    },
+    'Course': function(Class, Data){
+        Class.course.push(Data);
+        Class.save(()=>{
+            console.log('커리큘럼 추가성공')
+        });
+    },
+    'LectureTime': function(Class, Data){
+        Class.lectureTime.push(Data);
+        Class.save(()=>{
+            console.log('강의시간 추가성공')
+        });
+    },
+    'MaxTutee': function(Class, Data){
+        Class.maxTutee = Data;
+        Class.save(()=>{
+            console.log('최대 튜티 수 추가성공')
+        });
+    },
+    'SkypeLink': function(Class, Data){
+        Class.skypeLink = Data;
+        Class.save(()=>{
+            console.log('스카이프링크 추가성공')
+        });
+    },
+    'Place': function(Class, Data){
+        Class.place = Data;
+        Class.save(()=>{
+            console.log('수업장소 추가성공')
+        });
+    }
+}
+
 module.exports = {
     isDataPrepared: function(Class){
         return IS_DATA_PREPARED[Class.classType](Class)
@@ -36,5 +75,6 @@ module.exports = {
     isAccessible: function(dataType, classType){
         return DATA_TYPE[dataType].includes(classType)
     },
+    ADD_FUNCTIONS_FOR_TYPE: ADD_FUNCTIONS_FOR_TYPE
 }
 
