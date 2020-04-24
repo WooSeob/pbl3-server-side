@@ -1,13 +1,14 @@
 var express = require('express');
 //var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
+var MailAuth = require('../Schemas/MailAuth');
 var router = express.Router();
 const smtpTransport = require('nodemailer-smtp-transport');
 const nodemailer = require('nodemailer');
 
 // TODO 비밀번호 암호화 할것
 // 로그인
-router.post('/login', function(req, res){
+router.post('/login', function(req, res) {
     var uname = req.body.username;
     var pwd = req.body.password;
     User.findOne({username: uname}, (err, user)=>{
@@ -97,9 +98,13 @@ router.post('/auth-email', function(req, res){
         res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
     }
 });  
+
+// 발급된 인증번호를 3분후에 삭제 -> 3분 타이머
+function deleteAuthnum() {
+  console.log('this is test for delete authnum in DB with 3minutes!');
+}
   
-  
-  //얘는 그냥 함수
+  // 얘는 그냥 함수
   /* 이메일 보내는 함수 */
 function sendMail(email){
   
@@ -109,6 +114,7 @@ function sendMail(email){
     }
     randomNumber = randomNum(100000,999999);
   
+    
       // 이메일 기본 설정 
       var transporter = nodemailer.createTransport(smtpTransport({
         service: 'gmail',
@@ -119,7 +125,7 @@ function sendMail(email){
         }
       }));
       
-      //이메일 형식 
+      // 이메일 형식 
       var mailOptions = {
         from: 'tutor2tutee@gmail.com',
         to: email,
@@ -136,6 +142,10 @@ function sendMail(email){
           console.log('인증번호(System): ' + randomNumber)
         }
       });
+
+      // setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min
+      setTimeout(deleteAuthnum, 180000); 
+
       return randomNumber;
   }
 
