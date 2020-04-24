@@ -52,7 +52,7 @@ app.use('/auth', authRouter);
 app.use('/user', userRouter);
 
 //테스팅
-test.increasePoint('5e940910ecc5c844f02c2fda', 4000);
+// test.increasePoint('5e940910ecc5c844f02c2fda', 4000);
 
 app.get('/', function(req, res){
     res.send('<h1>Hello home page</h1>');

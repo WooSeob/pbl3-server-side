@@ -116,14 +116,17 @@ function insertInfo(email, randomNumber) {
       return err;
     }
   });
-  console.log("이게 잘 뜬다면 아마도 이메일과 인증번호는 정상적으로 들어갔을거야..");
+  console.log("\n(System) : 사용자의 메일주소와 인증번호가 정상적으로 저장되었습니다. ");
+  
+  return mailAuthinfo;
 }
 
 
-// 발급된 인증번호를 3분후에 삭제 -> 3분 타이머
-function deleteInfo() {
-  console.log('this is test for delete authnum in DB with 3minutes!');
-}
+// 발급된 인증번호를 3분후에 삭제 -> 3분 타이머 --> 에러 발생 
+ function deleteInfo() {
+    mailAuthInfo.findByIdAndDelete(email) 
+    console.log("\n(System)"+email+'의 인증번호의 유효시간이 만료되어, 자동으로 삭제됩니다.');
+ }
 
   
   // 얘는 그냥 함수
@@ -167,8 +170,8 @@ function sendMail(email){
 
       
       // setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min
-      setTimeout(insertInfo(email, randomNumber), 1500);
-      setTimeout(deleteInfo, 180000); 
+      insertInfo(email, randomNumber);
+      setTimeout(deleteInfo(email), 181500); 
 
       return randomNumber;
   }

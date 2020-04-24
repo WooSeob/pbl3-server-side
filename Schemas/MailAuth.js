@@ -13,4 +13,8 @@ const MailAuthSchema = new mongoose.Schema({
    
 });
 
+// MailAuthSchema.statics.deleteInfo = function(email, Callback){
+//     this.find
+// }
+
 module.exports = MailAuthSchema;
