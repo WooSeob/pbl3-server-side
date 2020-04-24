@@ -77,7 +77,9 @@ const ClassSchema = new mongoose.Schema({
     //수업시간
     lectureTime: [LectureTime],
     //수업에 참여할 수 있는 최대 튜티수
-    maxTutee: Number
+    maxTutee: Number,
+    //수업장소 (Only OfflineType)
+    place: String
 });
 /*
     스키마 -> 모델 -> 다큐먼트
@@ -104,76 +106,76 @@ ClassSchema.methods.isJoinAllowed = function(){
     }
 };
 
+ClassSchema.methods.addClassData = async function(targetDataType, Data, Callback){
+    if(ClassDataChecker.isAccessible(targetDataType, this.classType)){
+        //다큐먼트에 데이터 추가 추가.
+        await addClassDataByClassType(targetDataType, this, Data)
+    }else{
+        await Callback('이 클래스에는 ' + targetDataType + '을 추가 할 수 없습니다.');
+    }
+}
 
 /*
     Class 모델이 호출하는 메서드
 */
-ClassSchema.statics.addCourse = function(targetClassID, data, callback){
+ClassSchema.statics.addClassData = function(targetDataType, targetClassID, Data, Callback){
+    //ClassID로 다큐먼트 찾아서
     this.findById(targetClassID, (err, found)=>{
         if(err){callback(err);return}
-
-        if(ClassDataChecker.isAccessible('Course', found.classType)){
-            //커리큘럼 추가.
-            found.course.push(data);
-            found.save(()=>{
-                console.log('커리큘럼 추가성공')
-                ClassStateManager.checkPrepared(found)
-            });
+        //다큐먼트에 데이터 추가 추가.  
+        if(ClassDataChecker.isAccessible(targetDataType, found.classType)){
+            addClassDataByClassType(targetDataType, found, Data)
         }else{
-            callback('이 클래스에는 커리큘럼을 추가 할 수 없습니다.');
+            Callback('이 클래스에는 ' + targetDataType + '을 추가 할 수 없습니다.');
         }
     })
-};
+}
 
-ClassSchema.statics.addLectureTime = function(targetClassID, data, callback){
-    this.findById(targetClassID, (err, found)=>{
-        if(err){callback(err);return}
+const ADD_FUNCTIONS_FOR_TYPE = {
+    'BasicInfo': async function(Class, Data){
+        Class.basicInfo = Data;
+        await Class.save( async ()=>{
+            await console.log('기본정보 추가성공')
+        });
+    },
+    'Course': async function(Class, Data){
+        Class.course.push(Data);
+        await Class.save(async ()=>{
+            await console.log('커리큘럼 추가성공')
+        });
+    },
+    'LectureTime': async function(Class, Data){
+        Class.lectureTime.push(Data);
+        await Class.save(async ()=>{
+            await console.log('강의시간 추가성공')
+        });
+    },
+    'MaxTutee': async function(Class, Data){
+        Class.maxTutee = Data;
+        await Class.save(async ()=>{
+            await console.log('최대 튜티 수 추가성공')
+        });
+    },
+    'SkypeLink': async function(Class, Data){
+        Class.skypeLink = Data;
+        await Class.save(async ()=>{
+            await console.log('스카이프링크 추가성공')
+        });
+    },
+    'Place': async function(Class, Data){
+        Class.place = Data;
+        await Class.save(async ()=>{
+            await console.log('수업장소 추가성공')
+        });
+    }
+}
 
-        if(ClassDataChecker.isAccessible('LectureTime', found.classType)){
-            //강의시간 추가.
-            found.lectureTime.push(data);
-            found.save(()=>{
-                console.log('강의시간 추가성공')
-                ClassStateManager.checkPrepared(found)
-            });
-        }else{
-            callback('이 클래스에는 강의시간을 추가 할 수 없습니다.');
-        }
-    })
-};
+async function addClassDataByClassType(dataType, Class, Data){
+    await ADD_FUNCTIONS_FOR_TYPE[dataType](Class, Data)
+    await ClassStateManager.checkPrepared(Class)
+}
 
-ClassSchema.statics.addMaxTutee = function(targetClassID, data, callback){
-    this.findById(targetClassID, (err, found)=>{
-        if(err){callback(err);return}
 
-        if(ClassDataChecker.isAccessible('MaxTutee', found.classType)){
-            //최대 튜티 수 추가.
-            found.maxTutee = data;
-            found.save(()=>{
-                console.log('최대 튜티 수 추가성공')
-                ClassStateManager.checkPrepared(found)
-            });
-        }else{
-            callback('이 클래스에는 최대 튜티 수를 설정 할 수 없습니다.');
-        }
-    })
-};
-
-ClassSchema.statics.addSkypeLink = function(targetClassID, data, callback){
-    this.findById(targetClassID, (err, found)=>{
-        if(err){callback(err);return}
-        
-        if(ClassDataChecker.isAccessible('SkypeLink', found.classType)){
-            //스카이프링크 추가.
-            found.skypeLink = data;
-            found.save(()=>{
-                console.log('스카이프링크 추가성공')
-            });
-        }else{
-            callback('이 클래스에는 스카이프 링크를 설정 할 수 없습니다.');
-        }
-    })
-};
 
 
 
