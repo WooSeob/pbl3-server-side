@@ -6,8 +6,8 @@ var router = express.Router();
 const smtpTransport = require('nodemailer-smtp-transport');
 const nodemailer = require('nodemailer');
 
-var MailAuth = require('../Schemas/MailAuth');
-var AuthMail = mongoose.model("MailAuth", MailAuth);
+var MailAuthSchema = require('../Schemas/MailAuth');
+var AuthMail = mongoose.model("MailAuth", MailAuthSchema);
 
 
 
@@ -81,19 +81,38 @@ router.post('/send-email', function(req, res){
 
     console.log("\nemail :", userEmail);
     
-    //메일 보내는 Function - sendMail
+    // 메일 보내는 Function - sendMail
     randomNumber = sendMail(userEmail);
-    res.send('<script type="text/javascript">alert("메일 발송했습니다.");</script>');
+    
+    // DB에 저장
+    var mailAuthInfo = new AuthMail({
+    
+      webmail : userEmail,
+      authNum : "222222" 
 
   });
   
+    mailAuthInfo.save(function(err){
+
+      if(err){
+        return err;
+      }
+    
+    });
+    var x = AuthMail.find({webmail : userEmail}).authNum;
+    console.log(x)
+  });
+  
+
+
   // auth라우터에서 라우팅
   // 인증번호 검증
 router.post('/auth-email', function(req, res){
     let authNum = req.body.authNum;
-  
+
     console.log('인증번호(User)  :   '+ authNum);
-  
+    
+    
     //인증 여부 alert으로 알려줌
   
     if(authNum == randomNumber){
@@ -103,30 +122,36 @@ router.post('/auth-email', function(req, res){
         res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
     }
 });
-
-// 발급된 인증번호와 사용자 메일 주소를 디비에 저장..
-function insertInfo(email, randomNumber) {
-  var mailAuthInfo = new AuthMail({
-    webmail : email,
-    authNum : randomNumber 
-  });
-
-  mailAuthInfo.save(function(err){
-    if(err){
-      return err;
-    }
-  });
-  console.log("\n(System) : 사용자의 메일주소와 인증번호가 정상적으로 저장되었습니다. ");
   
-  return mailAuthinfo;
-}
 
 
-// 발급된 인증번호를 3분후에 삭제 -> 3분 타이머 --> 에러 발생 
+// // 발급된 인증번호와 사용자 메일 주소를 디비에 저장..
+// function insertInfo(email, randomNumber) {
+//   var mailAuthInfo = new AuthMail({
+//     webmail : email,
+//     authNum : randomNumber 
+//   });
+
+//   mailAuthInfo.save(function(err){
+//     if(err){
+//       return err;
+//     }
+//   });
+  
+//   console.log("\n(System) : 사용자의 메일주소와 인증번호가 정상적으로 저장되었습니다. ");
+//   /* 
+//   console.log(testtt+ " !!!!!!!!!!!!");
+//   setTimeout(mailAuthInfo.findByIdAndDelete(email), 30000)
+//   */
+// }
+
+/*
+발급된 인증번호를 3분후에 삭제 -> 3분 타이머 --> 에러 발생 
  function deleteInfo() {
     mailAuthInfo.findByIdAndDelete(email) 
     console.log("\n(System)"+email+'의 인증번호의 유효시간이 만료되어, 자동으로 삭제됩니다.');
  }
+ */
 
   
   // 얘는 그냥 함수
@@ -169,9 +194,10 @@ function sendMail(email){
       });
 
       
-      // setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min
-      insertInfo(email, randomNumber);
-      setTimeout(deleteInfo(email), 181500); 
+      /* setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min */
+      // insertInfo(email, randomNumber);
+      
+      // setTimeout(deleteInfo(email), 181500); 
 
       return randomNumber;
   }

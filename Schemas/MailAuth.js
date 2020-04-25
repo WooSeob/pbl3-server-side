@@ -17,4 +17,14 @@ const MailAuthSchema = new mongoose.Schema({
 //     this.find
 // }
 
+
+MailAuthSchema.statics.alertThisEmail = function(){
+    return this.webmail;
+};
+
+
+MailAuthSchema.statics.alertThisNum = function(){
+    return this.authNum;
+};
+
 module.exports = MailAuthSchema;

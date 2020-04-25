@@ -119,10 +119,9 @@ classRouter.post('/', function(req, res){
             }
 
             //커리큘럼 데이터 있으면 추가
-            if(req.body.course_description && req.body.course_link){
+            if(req.body.course_description){
                 newCourse = new Course({
                     description: req.body.course_description,
-                    link: req.body.course_link
                 })
                 // TaskQueue.push({
                 //     type: 'Course',
