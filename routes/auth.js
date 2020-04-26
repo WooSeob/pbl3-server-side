@@ -1,7 +1,6 @@
 var express = require('express');
 //var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
-var mongoose = require('mongoose');
 var router = express.Router();
 const smtpTransport = require('nodemailer-smtp-transport');
 const nodemailer = require('nodemailer');
@@ -88,7 +87,11 @@ router.post('/send-email', function(req, res){
       webmail : userEmail,
       authNum : randomNumber
   });
-    
+
+    /* 여기서 구현해야 할 부분 :
+     DB에 이메일이 존재하면, 
+     인증번호만 업데이트 해주기 */
+
     mailAuthInfo.save(function(err){
       if(err){
         return err;
@@ -114,30 +117,44 @@ router.post('/send-email', function(req, res){
           return handleError(err);
         } else {
           console.log("\n*****"+ userEmail+ "'s 의 정보가 DB에서 삭제되었습니다!  (Time :"+currentHourDB+"시 "+currentMinuteDB+"분 "+currentSecondDB+"초) *****");
-          return 0;
         }
       });    
     } 
+    
     // 3분을 기다렸다가, 저장되어있는 Info 삭제
     setTimeout(deleteInfo, 180000);
     
-
   });
 
   // auth라우터에서 라우팅
   // 인증번호 검증
 router.post('/auth-email', function(req, res){
-    let authNum = req.body.authNum;
-
-   console.log('인증번호(User)  :   '+ authNum);
-
-    //인증 여부 alert으로 알려줌  
-    if(authNum == randomNumber){
-        console.log('인증성공')
+    let userAuthNum = req.body.authNum;
+    let userWebmail = (req.body.email)+"hknu.ac.kr";
+    
+    console.log('인증번호(User)  :   '+ userAuthNum);
+    
+   
+    Mail.findOne({webmail:userWebmail}, (err, mail)=>{
+      console.log("DB속 인증번호 : " + mail.authNum)
+      var authNumInDB = mail.authNum;
+      
+      if(userAuthNum == authNumInDB){
+        console.log("----- "+userWebmail+"님 인증에 성공하였습니다. -----");
         res.send('<script type="text/javascript">alert("인증 성공했습니다!");</script>');
-    } else{
+      } else{
+        console.log("----- "+userWebmail+"님 인증에 실패하였습니다. -----");
         res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
-    }
+      }
+    });
+    
+     //인증 여부 alert으로 알려줌  
+    // if(authNum == randomNumber){
+    //     console.log('인증성공')
+    //     res.send('<script type="text/javascript">alert("인증 성공했습니다!");</script>');
+    // } else{
+    //     res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
+    // }
 });
     
   // 얘는 그냥 함수
@@ -175,8 +192,6 @@ function sendMail(email){
           console.log(error);
         } else {
           console.log('***** 인증메일이 정상적으로 발송되었습니다! *****');
-          
-          // console.log('인증번호(System): ' + randomNumber)
         }
       });
 
