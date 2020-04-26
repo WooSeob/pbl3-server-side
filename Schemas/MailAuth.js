@@ -4,27 +4,33 @@ var mongoose = require('mongoose');
 const MailAuthSchema = new mongoose.Schema({
     webmail: String,
     authNum: Number
-    
-    /* createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    */
-   
+       
 });
 
-// MailAuthSchema.statics.deleteInfo = function(email, Callback){
-//     this.find
+
+
+// MailAuthSchema.statics.deleteInfo = function(userEmail){
+//     if(Mail.findOne({webmail:userEmail}) === true){
+//         Mail.findOneAndDelete({webmail:userEmail}, function(err, result){
+//             callback({
+//                 message:"Successfully deleted mail",
+//                 book: result
+//             });
+//         });
+//     }
 // }
 
 
-MailAuthSchema.statics.alertThisEmail = function(){
-    return this.webmail;
-};
+
+// MailAuthSchema.methods.compareAuthNum = function(userInput) {
+    
+//     if(this.authNum === userInput){
+//         console.log("!!!인증성공!!!")
+//     } else {
+//         console.log("인증 실패다 이자식아!")
+//     }
+// };
 
 
-MailAuthSchema.statics.alertThisNum = function(){
-    return this.authNum;
-};
-
-module.exports = MailAuthSchema;
+const Mail = mongoose.model("Mail", MailAuthSchema);
+module.exports = Mail;

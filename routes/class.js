@@ -238,6 +238,7 @@ classRouter.post('/:id/course', (req, res)=>{
 //@@@ 이 함수는 받아온 데이터로 course 만들어서 Class.course배열에 계속해서 집어넣는 함숩니다. 
     let targetClassID = req.params.id;
     let userID = req.session.uid
+    
     var newCourse = new Course({
         description: req.body.description,
         link: req.body.link

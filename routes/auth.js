@@ -6,8 +6,8 @@ var router = express.Router();
 const smtpTransport = require('nodemailer-smtp-transport');
 const nodemailer = require('nodemailer');
 
-var MailAuthSchema = require('../Schemas/MailAuth');
-var AuthMail = mongoose.model("MailAuth", MailAuthSchema);
+var Mail = require('../Schemas/MailAuth');
+
 
 
 
@@ -63,7 +63,8 @@ router.get('/isAuthenticated', function(req, res){
     }
 })
 
-var randomNumber
+var randomNumber;
+
 // 회원가입 페이지에서 인증번호 발송 요청
 // 사용자 유저 이메일주소 받아오기
 router.post('/send-email', function(req, res){
@@ -73,48 +74,64 @@ router.post('/send-email', function(req, res){
       res.send(
         `<script type="text/javascript">
           alert("메일주소를 입력해주세요."); 
-          window.location = 'http://localhost:8080'; 
+          window.location = 'http://localhost:3000'; 
       </script>`);
     }
     
     let userEmail = (req.body.email+'@hknu.ac.kr');
-
-    console.log("\nemail :", userEmail);
-    
+       
     // 메일 보내는 Function - sendMail
     randomNumber = sendMail(userEmail);
     
     // DB에 저장
-    var mailAuthInfo = new AuthMail({
-    
+    var mailAuthInfo = new Mail({
       webmail : userEmail,
-      authNum : "222222" 
-
+      authNum : randomNumber
   });
-  
+    
     mailAuthInfo.save(function(err){
-
       if(err){
         return err;
       }
-    
-    });
-    var x = AuthMail.find({webmail : userEmail}).authNum;
-    console.log(x)
-  });
-  
+      var e = new Date();
+      var currentHour = e.getHours();
+      var currentMinute = e.getMinutes();
+      var currentSecond = e.getSeconds();
 
+      console.log("\n***** DB에 메일주소: "+ userEmail +" , 인증번호: " + randomNumber + " 추가 됨 *****  (Time : "+currentHour+"시 "+currentMinute+"분"+ currentSecond+"초)"); 
+    });
+
+    // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
+    function deleteInfo(){
+      
+      var d = new Date();
+      var currentHourDB = d.getHours();
+      var currentMinuteDB = d.getMinutes();
+      var currentSecondDB = d.getSeconds();
+
+      Mail.deleteOne({webmail:userEmail}, function(err){
+        if(err){
+          return handleError(err);
+        } else {
+          console.log("\n*****"+ userEmail+ "'s 의 정보가 DB에서 삭제되었습니다!  (Time :"+currentHourDB+"시 "+currentMinuteDB+"분 "+currentSecondDB+"초) *****");
+          return 0;
+        }
+      });    
+    } 
+    // 3분을 기다렸다가, 저장되어있는 Info 삭제
+    setTimeout(deleteInfo, 180000);
+    
+
+  });
 
   // auth라우터에서 라우팅
   // 인증번호 검증
 router.post('/auth-email', function(req, res){
     let authNum = req.body.authNum;
 
-    console.log('인증번호(User)  :   '+ authNum);
-    
-    
-    //인증 여부 alert으로 알려줌
-  
+   console.log('인증번호(User)  :   '+ authNum);
+
+    //인증 여부 alert으로 알려줌  
     if(authNum == randomNumber){
         console.log('인증성공')
         res.send('<script type="text/javascript">alert("인증 성공했습니다!");</script>');
@@ -122,38 +139,7 @@ router.post('/auth-email', function(req, res){
         res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
     }
 });
-  
-
-
-// // 발급된 인증번호와 사용자 메일 주소를 디비에 저장..
-// function insertInfo(email, randomNumber) {
-//   var mailAuthInfo = new AuthMail({
-//     webmail : email,
-//     authNum : randomNumber 
-//   });
-
-//   mailAuthInfo.save(function(err){
-//     if(err){
-//       return err;
-//     }
-//   });
-  
-//   console.log("\n(System) : 사용자의 메일주소와 인증번호가 정상적으로 저장되었습니다. ");
-//   /* 
-//   console.log(testtt+ " !!!!!!!!!!!!");
-//   setTimeout(mailAuthInfo.findByIdAndDelete(email), 30000)
-//   */
-// }
-
-/*
-발급된 인증번호를 3분후에 삭제 -> 3분 타이머 --> 에러 발생 
- function deleteInfo() {
-    mailAuthInfo.findByIdAndDelete(email) 
-    console.log("\n(System)"+email+'의 인증번호의 유효시간이 만료되어, 자동으로 삭제됩니다.');
- }
- */
-
-  
+    
   // 얘는 그냥 함수
   /* 이메일 보내는 함수 */
 function sendMail(email){
@@ -188,16 +174,11 @@ function sendMail(email){
         if (error) {
           console.log(error);
         } else {
-          console.log('Email sent complete! : ' + info.response);
-          console.log('인증번호(System): ' + randomNumber)
+          console.log('***** 인증메일이 정상적으로 발송되었습니다! *****');
+          
+          // console.log('인증번호(System): ' + randomNumber)
         }
       });
-
-      
-      /* setTimeout(Func, time) time - 1000 = 1 sec, 60000 = 1 min, 180000 = 3 min */
-      // insertInfo(email, randomNumber);
-      
-      // setTimeout(deleteInfo(email), 181500); 
 
       return randomNumber;
   }
