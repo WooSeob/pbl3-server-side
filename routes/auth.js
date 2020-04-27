@@ -2,13 +2,13 @@ var express = require('express');
 //var Class = require('../Schemas/Class');
 var User = require('../Schemas/User');
 var router = express.Router();
+var mongoose = require('mongoose');
 const smtpTransport = require('nodemailer-smtp-transport');
 const nodemailer = require('nodemailer');
 
 var Mail = require('../Schemas/MailAuth');
 
-
-
+const hknuAddress = "@hknu.ac.kr";
 
 // TODO 비밀번호 암호화 할것
 // 로그인
@@ -77,7 +77,7 @@ router.post('/send-email', function(req, res){
       </script>`);
     }
     
-    let userEmail = (req.body.email+'@hknu.ac.kr');
+    let userEmail = (req.body.email+hknuAddress);
        
     // 메일 보내는 Function - sendMail
     randomNumber = sendMail(userEmail);
@@ -88,20 +88,17 @@ router.post('/send-email', function(req, res){
       authNum : randomNumber
   });
 
-    /* 여기서 구현해야 할 부분 :
-     DB에 이메일이 존재하면, 
-     인증번호만 업데이트 해주기 */
-
     mailAuthInfo.save(function(err){
       if(err){
         return err;
       }
+
       var e = new Date();
       var currentHour = e.getHours();
       var currentMinute = e.getMinutes();
       var currentSecond = e.getSeconds();
 
-      console.log("\n***** DB에 메일주소: "+ userEmail +" , 인증번호: " + randomNumber + " 추가 됨 *****  (Time : "+currentHour+"시 "+currentMinute+"분"+ currentSecond+"초)"); 
+      console.log("\n***** DB에 메일주소: "+ userEmail +" , 인증번호: " + randomNumber + " 추가 됨 *****  (Time : "+currentHour+"시 "+currentMinute+"분 "+ currentSecond+"초)"); 
     });
 
     // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
@@ -116,13 +113,14 @@ router.post('/send-email', function(req, res){
         if(err){
           return handleError(err);
         } else {
-          console.log("\n*****"+ userEmail+ "'s 의 정보가 DB에서 삭제되었습니다!  (Time :"+currentHourDB+"시 "+currentMinuteDB+"분 "+currentSecondDB+"초) *****");
+          console.log("\n***** "+ userEmail+ " 님 의 인증정보가 DB에서 삭제되었습니다!  (Time :"+currentHourDB+"시 "+currentMinuteDB+"분 "+currentSecondDB+"초) *****");
         }
       });    
     } 
     
     // 3분을 기다렸다가, 저장되어있는 Info 삭제
     setTimeout(deleteInfo, 180000);
+    clearTimeout(deleteInfo);
     
   });
 
@@ -130,31 +128,37 @@ router.post('/send-email', function(req, res){
   // 인증번호 검증
 router.post('/auth-email', function(req, res){
     let userAuthNum = req.body.authNum;
-    let userWebmail = (req.body.email)+"hknu.ac.kr";
+    let userWebmail = (req.body.email)+hknuAddress;
     
-    console.log('인증번호(User)  :   '+ userAuthNum);
+    // console.log('인증번호(User)  :   '+ userAuthNum);
+    console.log('사용자 입력 이메일 주소 : ' + userWebmail);
+    console.log('사용자 입력 인증번호  :   '+ userAuthNum);
     
-   
-    Mail.findOne({webmail:userWebmail}, (err, mail)=>{
-      console.log("DB속 인증번호 : " + mail.authNum)
+// 우섭이혀
+/*
+    Mail.find(null, (err,mail)=>{
+      for(let authData of mail) {
+        console.log(authData.webmail == userWebmail)   
+        console.log(authData.webmail)
+        
+        if(authData.webmail == userWebmail && authData.authNum == userAuthNum){
+          console.log("인증 성공 ")
+        }
+      }
+      console.log(mail)})
+      */
+     
+    Mail.findOne({webmail:userWebmail}, (err, mail)=> {
+
+      console.log("인증번호 in DB : " + mail.authNum);
       var authNumInDB = mail.authNum;
       
       if(userAuthNum == authNumInDB){
         console.log("----- "+userWebmail+"님 인증에 성공하였습니다. -----");
-        res.send('<script type="text/javascript">alert("인증 성공했습니다!");</script>');
       } else{
         console.log("----- "+userWebmail+"님 인증에 실패하였습니다. -----");
-        res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
       }
-    });
-    
-     //인증 여부 alert으로 알려줌  
-    // if(authNum == randomNumber){
-    //     console.log('인증성공')
-    //     res.send('<script type="text/javascript">alert("인증 성공했습니다!");</script>');
-    // } else{
-    //     res.send('<script type="text/javascript">alert("인증 실패했습니다!");</script>');
-    // }
+    });  
 });
     
   // 얘는 그냥 함수
