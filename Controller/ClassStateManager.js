@@ -20,14 +20,18 @@ const Manager = {
     startLecture: function(Class, next){
         //강의 시작(더이상 수강신청 허용하지 않음)하기
         //Joinable -> InProgress
-        if(Class.state == ClassConst.state.JOIN_ABLE && Class.tutees.length >= ClassConst.MIN_TUTEE){
-            Class.state = ClassConst.state.IN_PROGRESS
-            Class.save(()=>{
-                    console.log(Class._id + ' 강의시작. 더이상 새로운 튜티의 강의 참여를 허용하지 않습니다.');
-                    next(null);
-                })
+        if(Class.classType == 'RealtimeOnlineCourseType' || Class.classType == 'OfflineType'){
+            if(Class.state == ClassConst.state.JOIN_ABLE && Class.tutees.length >= ClassConst.MIN_TUTEE){
+                Class.state = ClassConst.state.IN_PROGRESS
+                Class.save(()=>{
+                        console.log(Class._id + ' 강의시작. 더이상 새로운 튜티의 강의 참여를 허용하지 않습니다.');
+                        next(null);
+                    })
+            }else{
+                next('강의를 시작 할 수 없습니다.');
+            }
         }else{
-            next('강의를 시작 할 수 없습니다.');
+            next('동영상형 또는 질의응답형은 InProgress 상태를 지원하지 않습니다.')
         }
     },
     endLecture: function(Class, next){

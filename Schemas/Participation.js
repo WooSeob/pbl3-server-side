@@ -7,6 +7,10 @@ const ParticipationSchema = new mongoose.Schema({
         default: Date.now
     },
     authNumber: String,
+    courseID: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course"
+    },
     tutees: [
         {
             type: mongoose.Schema.Types.ObjectId,

@@ -5,7 +5,7 @@ const STATE = {
     ENDED: 'Ended'
 }
 
-const MIN_TUTEE = 2
+const MIN_TUTEE = 1
 
 const DATA_COMPLETE_CONDITION_BY_CLASS_TYPE = {
     'RealtimeOnlineCourseType': function(Class){

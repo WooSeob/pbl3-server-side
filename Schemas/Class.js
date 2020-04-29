@@ -10,6 +10,9 @@ const ClassStateManager = require("../Controller/ClassStateManager");
 const DataManager = require("../Controller/DataManager");
 const ClassConst = require("../Const/Class")
 
+//TODO Participation -> AttendanceSchema 이름변경할것
+const Attendance = new mongoose.model("Attendance", Participation)
+
 const ClassSchema = new mongoose.Schema({
   //튜터 : User
   state: {
@@ -118,14 +121,14 @@ ClassSchema.methods.addClassData = function (targetDataType, Data, Callback) {
 };
 
 //Class 모델이 호출하는 메서드
-ClassSchema.statics.addClassData = function (
+ClassSchema.statics.addClassData = async function (
   targetDataType,
   targetClassID,
   Data,
   Callback
 ) {
   //ClassID로 다큐먼트 찾아서
-  this.findById(targetClassID, (err, found) => {
+  await this.findById(targetClassID, (err, found) => {
     if (err) {
       return Callback(err);
     }
@@ -141,13 +144,16 @@ ClassSchema.statics.addClassData = function (
 ClassSchema.statics.generateAttendance = function (targetClassID, Callback) {
   // <출석 객체 생성 메서드>
   // 1. 해당 ClassID로 Class 찾기
-  // 2. 요청 받은 시간이 해당 Class의 수업시간이 맞는지?
+  // 2. 지금 == 수업시간 ? 수업 진행가능한지?
+
   this.findById(targetClassID, (err, found) => {
     if (err) {
       return Callback(err);
     }
     if (isOnTime(found) && ClassStateManager.isClassOpenable(found)) {
       //지금이 해당 Class의 수업시간 + Class 상태가 수업 시작 가능상태면 시작 요청
+
+      //TODO 출석객체 이미 있을때 대응하기
       DataManager.generateAttendanceByClassType(found, Callback);
     } else {
       Callback(found.className + '의 수업시간이 아닙니다.', null)
@@ -158,13 +164,12 @@ ClassSchema.statics.generateAttendance = function (targetClassID, Callback) {
 ClassSchema.statics.attendance = function (targetClassID, auth, tuteeID, Callback) {
   // <튜티 출석하기 메서드>
   // 1. 해당 ClassID로 Class 찾기
-  // 2. 요청 받은 시간이 해당 Class의 수업시간이 맞는지?
+  // 2. 클래스타입별 출석 메서드 호출
   this.findById(targetClassID, (err, found) => {
     if (err) {
       return Callback(err);
     }
-    //해당 다큐먼트에 출석시도.
-    DataManager.attendanceByClassType(found, auth, tuteeID, Callback);
+    DataManager.attendByClassType(found, auth, tuteeID, Callback);
   });
 };
 
@@ -178,8 +183,8 @@ function isOnTime(Class){
   let finishTime = new Date()
 
   for(let LectureTime of Class.lectureTimes){
-    startTime.setHours(LectureTime.start.substring(0,2), LectureTime.start.substring(2,4), 0, 0)
-    finishTime.setHours(LectureTime.finish.substring(0,2), LectureTime.finish.substring(2,4), 0, 0)
+    startTime.setHours(String(LectureTime.start).substring(0,2), String(LectureTime.start).substring(2,4), 0, 0)
+    finishTime.setHours(String(LectureTime.finish).substring(0,2), String(LectureTime.finish).substring(2,4), 0, 0)
 
     if(DAY[LectureTime.day] == Now.getDay() &&
       Now.getTime() > startTime.getTime() && 

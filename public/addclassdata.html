@@ -61,13 +61,21 @@
         <h2>답변 추가</h2>
         <form action="/" method="post">
             <p>
-                <input id="qid"" type="text" name="qid" placeholder="qid">
+                <input id="qid" type="text" name="qid" placeholder="qid">
             </p>
             <p>
                 <input id="answer" type="text" name="answer" placeholder="answer">
             </p>
         </form>
         <div id="answer_submit">submit</div>
+
+        <h2>출석하기</h2>
+        <form action="/" method="post">
+            <p>
+                <input id="authNum" type="text" name="authNum" placeholder="authNum">
+            </p>
+        </form>
+        <div id="attendance_submit">submit</div>
 
 
         <script>
@@ -184,6 +192,23 @@
                     dataType: "text",
                     success: (res)=>{
                         console.log(res);
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+
+            $('#attendance_submit').click(()=>{
+                console.log('clicked')
+                let auth = $('#authNum').val()
+                $.ajax({
+                    type: "POST",
+                    url: "/class/" + classID + "/attendance",
+                    data: "auth=" + auth,
+                    dataType: "text",
+                    success: (res)=>{
+                        console.log(res)
                     },
                     error: (xhr, status, responseTxt)=>{
                         console.log(xhr);
