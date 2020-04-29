@@ -5,24 +5,25 @@ var User = require('../Schemas/User');
 
 const ClassConst = require('../Const/Class')
 const ClassStateManager = require('../Controller/ClassStateManager')
-const ClassDataChecker = require('../Controller/DataChecker')
+const ClassDataChecker = require('../Controller/DataManager')
 
 var QnASchema = require('../Schemas/QnA')
 var ClassBasicInfoSchema = require('../Schemas/ClassBasicInfo')
 var CourseSchema = require('../Schemas/Course')
 var LectureTimeSchema = require('../Schemas/LectureTime')
 var LectureNoteSchema = require('../Schemas/LectureNote')
+var AttendanceSchema = require('../Schemas/Participation')
 
 const QnA = mongoose.model("QnA", QnASchema);
 const Course = mongoose.model("Course", CourseSchema);
 const ClassBasicInfo = mongoose.model("ClassBasicInfo", ClassBasicInfoSchema);
 const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
 const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
+const Attendance = mongoose.model("Attendance", AttendanceSchema);
 
 var classRouter = express.Router();
 
 /*
-    TODO
     1. 공통정보 CRUD
         1. Class.basicInfo
             1. 성적인증 이미지 url 
@@ -80,7 +81,7 @@ var classRouter = express.Router();
 */
 
 //수업생성
-//TODO
+//TODO api문서 성공시 실패시에 대한 부분 업데이트 할것
 classRouter.post('/', function(req, res){
     //튜터 아이디로 수업 생성
     User.findById(req.session.uid, (err,tutor)=>{
@@ -102,7 +103,8 @@ classRouter.post('/', function(req, res){
         });
 
         newClass.save(()=>{
-
+            let isSuccess = false;
+            
             //기본정보
             if(req.body.grade && req.body.class_description){
                 let basicInfo = new ClassBasicInfo({
@@ -113,8 +115,11 @@ classRouter.post('/', function(req, res){
                 //     type: 'BasicInfo',
                 //     data: basicInfo
                 // })
+                console.log('기본정보 추가 호출')
+
                 newClass.addClassData('BasicInfo', basicInfo, (errmsg)=>{
-                    console.log(errmsg)
+                    if(errmsg){return console.log(errmsg)}
+                    isSuccess = true;
                 })
             }
 
@@ -127,8 +132,11 @@ classRouter.post('/', function(req, res){
                 //     type: 'Course',
                 //     data: newCourse
                 // })
+                console.log('커리큘럼 추가 호출')
+
                 newClass.addClassData('Course', newCourse, (errmsg)=>{
-                    console.log(errmsg)
+                    if(errmsg){return console.log(errmsg)}
+                    isSuccess = true;
                 })
             }
             
@@ -143,8 +151,11 @@ classRouter.post('/', function(req, res){
                 //     type: 'LectureTime',
                 //     data: newTime
                 // })
+                console.log('강의시간 추가 호출')
+
                 newClass.addClassData('LectureTime', newTime, (errmsg)=>{
-                    console.log(errmsg)
+                    if(errmsg){return console.log(errmsg)}
+                    isSuccess = true;
                 })
             }
 
@@ -154,8 +165,10 @@ classRouter.post('/', function(req, res){
                 //     type: 'MaxTutee',
                 //     data: req.body.maxTutee
                 // })
+                console.log('최대튜티수 추가 호출')
                 newClass.addClassData('MaxTutee', req.body.maxTutee, (errmsg)=>{
-                    console.log(errmsg)
+                    if(errmsg){return console.log(errmsg)}
+                    isSuccess = true;
                 })
             }
 
@@ -165,8 +178,11 @@ classRouter.post('/', function(req, res){
                 //     type: 'SkypeLink',
                 //     data: req.body.skypeLink
                 // })
+                console.log('스카이프링크 추가 호출')
+
                 newClass.addClassData('SkypeLink', req.body.skypeLink, (errmsg)=>{
-                    console.log(errmsg)
+                    if(errmsg){return console.log(errmsg)}
+                    isSuccess = true;
                 })
             }
             
@@ -176,16 +192,25 @@ classRouter.post('/', function(req, res){
                 //     type: 'Place',
                 //     data: req.body.place
                 // })
+                console.log('수업장소 추가 호출')
+
                 newClass.addClassData('Place', req.body.place, (errmsg)=>{
-                    console.log(errmsg)
+                    if(errmsg){return console.log(errmsg)}
+                    isSuccess = true;
                 })
             }
 
             //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
             tutor.classesAsTutor.push(newClass._id);
             tutor.save(()=>{
-                console.log('클라이언트 응답')
-                res.send(newClass._id);
+                if(isSuccess){
+                    console.log('클라이언트 응답 : ' + newClass._id)
+                    res.send(newClass._id); 
+                }else{
+                    console.log('클라이언트 응답 : fail')
+                    res.send('fail')
+                }
+                
             });
         });
     });
@@ -227,7 +252,7 @@ classRouter.post('/:id/basic-info', (req, res)=>{
         description: req.body.description
     })
     Class.findByIdAndUpdate(targetClassID, {basicInfo: info}, (err, found)=>{
-        if(err){console.log(err)}
+        if(err){console.log(err); return res.send('fail')}
         ClassStateManager.checkPrepared(found)
         res.send(found);
     });
@@ -245,8 +270,9 @@ classRouter.post('/:id/course', (req, res)=>{
     })
 
     User.isTutorOf(userID, targetClassID, ()=>{
-        Class.addCourse(targetClassID, newCourse, (errmsg)=>{
-            console.log(errmsg);
+        Class.addClassData('Course',targetClassID, newCourse, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
         })
     })
 })
@@ -262,8 +288,9 @@ classRouter.post('/:id/lecture-time', (req, res)=>{
     })
 
     User.isTutorOf(userID, targetClassID, ()=>{
-        Class.addLectureTime(targetClassID, newTime, (errmsg)=>{
-            console.log(errmsg);
+        Class.addClassData('LectureTime', targetClassID, newTime, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
         })
     })
 })
@@ -276,28 +303,9 @@ classRouter.post('/:id/max-tutee', (req, res)=>{
     let numMaxTutee = req.body.maxTutee;
 
     User.isTutorOf(userID, targetClassID, ()=>{
-        Class.addMaxTutee(targetClassID, numMaxTutee, (errmsg)=>{
-            console.log(errmsg);
-        })
-    })
-})
-
-//강의 시작
-classRouter.get('/:id/start', (req, res)=>{
-    let userID = req.session.uid
-    let targetClassID = req.params.id;
-
-    //TODO 강의 타입별 기본정보가 모두 세팅되지 않으면 수업 시작시키면 안됨!!!!!!!!!!!!!
-    User.isTutorOf(userID, targetClassID, (err)=>{
-        if(err){console.log(err); return res.send('fail')}
-
-        Class.findById(targetClassID, (err, Class)=>{
-            if(err){console.log(err); return res.send('fail')}
-    
-            ClassStateManager.startLecture(Class, (err)=>{
-                if(err){console.log(err); return res.send('fail')}
-                res.send('success')
-            })
+        Class.addClassData('MaxTutee' ,targetClassID, numMaxTutee, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
         })
     })
 })
@@ -310,8 +318,28 @@ classRouter.post('/:id/skype', (req, res)=>{
     let skypeLink = req.body.skypeLink;
 
     User.isTutorOf(userID, targetClassID, ()=>{
-        Class.addSkypeLink(targetClassID, skypeLink, (errmsg)=>{
-            console.log(errmsg);
+        Class.addClassData('SkypeLink', targetClassID, skypeLink, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
+        })
+    })
+})
+
+//강의 시작
+classRouter.get('/:id/start', (req, res)=>{
+    let userID = req.session.uid
+    let targetClassID = req.params.id;
+
+    User.isTutorOf(userID, targetClassID, (err)=>{
+        if(err){console.log(err); return res.send('fail')}
+
+        Class.findById(targetClassID, (err, Class)=>{
+            if(err){console.log(err); return res.send('fail')}
+    
+            ClassStateManager.startLecture(Class, (err)=>{
+                if(err){console.log(err); return res.send('fail')}
+                res.send('success')
+            })
         })
     })
 })
@@ -338,21 +366,18 @@ classRouter.post('/:id/question', (req, res)=>{
 
     User.isTuteeOf(userID, targetClassID, ()=>{
         //질문추가
-        Class.findById(targetClassID, (err, Class)=>{
-            if(err){console.log(err);return res.send('fail')}
-            Class.qna.push(new QnA({
-                question: {
-                    Writer: user._id,
-                    content: content
-                }
-            }));
-            Class.save(()=>{
-                res.send('success');
-            })    
+        let newQuestion = QnA({
+            question: {
+                Writer: userID,
+                content: content
+            }
+        });
+        Class.addClassData('Question', targetClassID, newQuestion, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
         })
     })
 })
-
 //QnA 답변 추가
 classRouter.post('/:id/question/:qid', (req, res)=>{
     //답변은 튜터가 한다.
@@ -366,16 +391,13 @@ classRouter.post('/:id/question/:qid', (req, res)=>{
 
     //TODO 권한 없을때 응답 어떻게 해야할지 해결할것
     User.isTutorOf(userID, targetClassID, ()=>{
-        Class.findById(targetClassID, (err, found)=>{
-            //답변 달기                
-            found.qna.id(targetQuestion).answer = {
-                content: content
-            }
-            found.save(()=>{
-                console.log('답변 저장')
-                res.send('success')
-            })
-            console.log(found.qna.id(targetQuestion))
+        let newAnswer = {
+            target: targetQuestion,
+            content: content
+        }
+        Class.addClassData('Answer', targetClassID, newAnswer, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
         })
     })
 })
@@ -403,16 +425,59 @@ classRouter.post('/:id/lecture-note', (req, res)=>{
     let content = req.body.content;
     
     User.isTutorOf(userID, targetClassID, ()=>{
-        //질문추가
-        Class.findById(targetClassID, (err, Class)=>{
-            if(err){console.log(err);return res.send('fail')}
-            Class.lectureNote.push(new LectureNote({
-                title: title,
-                content: content
-            }));
-            Class.save(()=>{
-                res.send('success');
-            })    
+        //강의노트 추가
+        let newNote = new LectureNote({
+            title: title,
+            content: content
+        });
+        Class.addClassData('LectureNote', targetClassID, newNote, (errmsg)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            res.send('success')
+        })
+    })
+})
+
+//------------------------------------    출결관리    ------------------------------------
+//1. 출결 확인
+
+
+//2. 출석 요청
+classRouter.get('/:id/attendance', (req, res)=>{
+    //1. 인증번호 생성
+    //2. 실시간 채팅방 생성
+    let userID = req.session.uid
+    let targetClassID = req.params.id;
+
+    User.isTutorOf(userID, targetClassID, ()=>{
+        //1. 커리큘럼 온라인 실시간 Or 오프라인형 => 인증번호생성
+        //2. 질의응답형 => 채팅방생성
+        Class.generateAttendance(targetClassID, (errmsg, authData)=>{
+            if(errmsg){console.log(errmsg); return res.send('fail')}
+            //인증번호 응답
+            res.send(authData)
+        })
+        //동영상 강의형의 경우 수업객체를 커리큘럼을 추가될떄 자동으로 생성된다.
+    })
+})
+
+//3. 출석 인증
+classRouter.post('/:id/attendance', (req, res)=>{
+    //1. 인증번호 인증 -> 튜터 : 인증번호 생성 -> 튜티 : 인증 요청
+    //2. 동영상 '봤어요' -> 해당 attendance에 직접 api호출 해야함.
+    //3. 채팅방 입장시  -> 튜터 : 채팅방 오픈 -> 튜티 : 입장 (인증 성공)
+    let userID = req.session.uid
+    let targetClassID = req.params.id;
+    let auth = req.body.auth;
+
+    User.isTuteeOf(userID, targetClassID, ()=>{
+        // ----- 출석 인증 Process -----
+        //강의가 InProgress인가?
+        //수업.가장최근.인증번호 == 요청번호 && 수업.가장최근.생성일 + 3분 > 지금
+        //수업.가장최근.tutees.push(userID)
+        //성공 응답
+        Class.attendance(targetClassID, auth, userID, (errmsg)=>{
+            if(errmsg) {console.log(errmsg); return res.send('fail')}
+            res.send('success')
         })
     })
 })

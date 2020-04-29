@@ -27,6 +27,10 @@ const test1 = {
                 console.log('포인트 증가 성공');
             })
         })
+    },
+    delete: async function(){
+        const result = await Class.deleteMany({state : "Prepare"})
+        console.log(result)
     }
 }
 
