@@ -139,7 +139,7 @@ router.post("/send-email", function (req, res) {
     });
   }
 
-  // 3분을 기다렸다가, 저장되어있는 Info 삭제
+  // 3분을 기다렸다가, 저장되어있는 Info 삭제 60000 = 1분
   setTimeout(deleteInfo, 180000);
   clearTimeout(deleteInfo);
 });
@@ -154,27 +154,15 @@ router.post("/auth-email", function (req, res) {
   console.log("사용자 입력 이메일 주소 : " + userWebmail);
   console.log("사용자 입력 인증번호  :   " + userAuthNum);
 
-  // 우섭이형 검토 코드
-  /*
-    Mail.find(null, (err,mail)=>{
-      for(let authData of mail) {
-        console.log(authData.webmail == userWebmail)   
-        console.log(authData.webmail)
-        
-        if(authData.webmail == userWebmail && authData.authNum == userAuthNum){
-          console.log("인증 성공 ")
-        }
-      }
-      console.log(mail)})
-      */
-
   Mail.findOne({ webmail: userWebmail }, (err, mail) => {
     console.log("인증번호 in DB : " + mail.authNum);
     var authNumInDB = mail.authNum;
 
     if (userAuthNum == authNumInDB) {
       console.log("----- " + userWebmail + "님 인증에 성공하였습니다. -----");
-      mail.isAuth = true;
+
+      /* 인증여부에 따라 가입이 되고 안되고 구현 해야함 */
+      //mail.isAuth = true;
     } else {
       console.log("----- " + userWebmail + "님 인증에 실패하였습니다. -----");
     }
