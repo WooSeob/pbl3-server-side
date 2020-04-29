@@ -17,7 +17,7 @@
                 <input type="text" name="nickname" placeholder="nickname">
             </p>
             <p>
-                <input id="webmail" type="text" name="webmail" placeholder="webmail">
+                <input id="webmail" type="text" name="webmail" placeholder="webmail">@hknu.ac.kr
             </p>
             <p>
                 <input id="authnum" type="text" name="authnum" placeholder="auth number">
@@ -53,11 +53,11 @@
 
                 $('#btn_auth').click(()=>{
                 let authNum = $('#authnum').val();
-
+                let mail = $('#webmail').val();
                 $.ajax({
                         type: "POST",
                         url: "/auth/auth-email",
-                        data: "authNum=" + authNum,
+                        data: "authNum=" + authNum + "&email="+mail, 
                         dataType: "text",
                         success: (res)=>{
             
@@ -65,7 +65,8 @@
                         error: (xhr, status, responseTxt)=>{
                             console.log(xhr);
                         }
-                    })
+                    }) 
+                    
                 })
             </script>
         </form>
