@@ -1,17 +1,14 @@
 var mongoose = require("mongoose");
-var ClassBasicInfo = require("./ClassBasicInfo");
-var LectureNote = require("./LectureNote");
-var QnA = require("./QnA");
-var Course = require("./Course");
-var LectureTime = require("./LectureTime");
-var Participation = require("./Participation");
+var ClassBasicInfoSchema = require("./ClassBasicInfo");
+var LectureNoteSchema = require("./LectureNote");
+var QnASchema = require("./QnA");
+var CourseSchema = require("./Course");
+var LectureTimeSchema = require("./LectureTime");
+var AttendanceSchema = require("./Participation");
 
 const ClassStateManager = require("../Controller/ClassStateManager");
 const DataManager = require("../Controller/DataManager");
 const ClassConst = require("../Const/Class")
-
-//TODO Participation -> AttendanceSchema 이름변경할것
-const Attendance = new mongoose.model("Attendance", Participation)
 
 const ClassSchema = new mongoose.Schema({
   //튜터 : User
@@ -65,13 +62,13 @@ const ClassSchema = new mongoose.Schema({
 
   //--------------------------------------------------------------------------
   //강의실 홈에 보여질 내용 (성적인증, 소개글, 수업시간)
-  basicInfo: ClassBasicInfo,
+  basicInfo: ClassBasicInfoSchema,
   //강의노트
-  lectureNotes: [LectureNote],
+  lectureNotes: [LectureNoteSchema],
   //출결확인
-  participations: [Participation],
+  participations: [AttendanceSchema],
   //질의응답
-  qnas: [QnA],
+  qnas: [QnASchema],
 
   // Not Required
   //스카이프 링크 - 커리큘럼 온라인 실시간
@@ -79,9 +76,9 @@ const ClassSchema = new mongoose.Schema({
   //실시간 채팅방 - 질의응답형
   chattingRoom: String,
   //강의 링크 - 커리큘럼 온라인
-  courses: [Course],
+  courses: [CourseSchema],
   //수업시간
-  lectureTimes: [LectureTime],
+  lectureTimes: [LectureTimeSchema],
   //수업에 참여할 수 있는 최대 튜티수
   maxTutee: Number,
   //수업장소 (Only OfflineType)
@@ -153,7 +150,6 @@ ClassSchema.statics.generateAttendance = function (targetClassID, Callback) {
     if (isOnTime(found) && ClassStateManager.isClassOpenable(found)) {
       //지금이 해당 Class의 수업시간 + Class 상태가 수업 시작 가능상태면 시작 요청
 
-      //TODO 출석객체 이미 있을때 대응하기
       DataManager.generateAttendanceByClassType(found, Callback);
     } else {
       Callback(found.className + '의 수업시간이 아닙니다.', null)

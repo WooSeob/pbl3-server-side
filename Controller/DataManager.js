@@ -147,6 +147,7 @@ const ATTEND_FUNCTIONS_BY_CLASS_TYPE = {
                         return Callback('이미 시청한 동영상입니다.')
                     }
                 })
+                return;
             }
         }
         return Callback(auth + ' 해당 강의를 찾지 못했습니다.')
