@@ -31,6 +31,19 @@ const test1 = {
     delete: async function(){
         const result = await Class.deleteMany({state : "Prepare"})
         console.log(result)
+    },
+    resetUser: function(){
+        User.find(null, (err, found)=>{
+            console.log(found)
+            for(let user of found){
+                user.classesAsTutor = []
+                user.classesAsTutee = []
+                user.save(()=>{
+                    console.log('리셋성공')
+                })
+            }
+           
+        })
     }
 }
 

@@ -9,11 +9,6 @@ var userRouter = express.Router();
 
 //회원가입
 userRouter.post("/register", function (req, res) {
-<<<<<<< HEAD
-  
-  /* 인증여부에 따라 가입이 되고 안되고 구현 해야함 */
-=======
->>>>>>> 323093a9623c71f1ac64d7c184d512944d3ba5e6
   User.create({
     username: req.body.username,
     password: req.body.password,

@@ -81,7 +81,6 @@ var classRouter = express.Router();
 */
 
 //수업생성
-//TODO api문서 성공시 실패시에 대한 부분 업데이트 할것
 classRouter.post('/', function(req, res){
     //튜터 아이디로 수업 생성
     User.findById(req.session.uid, (err,tutor)=>{
@@ -282,9 +281,11 @@ classRouter.post('/:id/lecture-time', (req, res)=>{
     //@@@ 이 함수는 받아온 데이터로 LectureTime 만들어서 Class.LectureTime배열에 계속해서 집어넣는 함숩니다. 
     let targetClassID = req.params.id;
     let userID = req.session.uid
+    
     var newTime = new LectureTime({
-        startAt: req.body.startAt,
-        duration: req.body.duration
+        day: req.body.time_day,
+        start: req.body.time_start,
+        finish: req.body.time_finish
     })
 
     User.isTutorOf(userID, targetClassID, ()=>{
@@ -388,8 +389,6 @@ classRouter.post('/:id/question/:qid', (req, res)=>{
     let targetQuestion = req.params.qid;
     let content = req.body.content;
     let userID = req.session.uid
-
-    //TODO 권한 없을때 응답 어떻게 해야할지 해결할것
     User.isTutorOf(userID, targetClassID, ()=>{
         let newAnswer = {
             target: targetQuestion,
@@ -439,7 +438,25 @@ classRouter.post('/:id/lecture-note', (req, res)=>{
 
 //------------------------------------    출결관리    ------------------------------------
 //1. 출결 확인
+classRouter.get('/:id/myattendance', (req, res)=>{
+    let userID = req.session.uid
+    let targetClassID = req.params.id;
+    User.isTuteeOf(userID, targetClassID, ()=>{
+        Class.findById(targetClassID, (err, found)=>{
+            if(err){ console.log(errmsg); return res.send('fail')}
 
+            //TODO 클래스 타입별 기능 구현하기
+            let attendanceData = new Array()
+            for(let attendandce of found.participations){
+                attendanceData.push({
+                        'date': attendandce.startTime,
+                        'isAttend': attendandce.tutees.includes(userID)
+                    })
+            }
+            res.send(attendanceData)
+        })
+    })
+})
 
 //2. 출석 요청
 classRouter.get('/:id/attendance', (req, res)=>{
@@ -451,12 +468,12 @@ classRouter.get('/:id/attendance', (req, res)=>{
     User.isTutorOf(userID, targetClassID, ()=>{
         //1. 커리큘럼 온라인 실시간 Or 오프라인형 => 인증번호생성
         //2. 질의응답형 => 채팅방생성
+        //3. 동영상 강의형의 경우 수업객체를 커리큘럼을 추가될떄 자동으로 생성된다.
         Class.generateAttendance(targetClassID, (errmsg, authData)=>{
             if(errmsg){console.log(errmsg); return res.send('fail')}
-            //인증번호 응답
+            //인증번호 or 채팅방주소 응답
             res.send(authData)
         })
-        //동영상 강의형의 경우 수업객체를 커리큘럼을 추가될떄 자동으로 생성된다.
     })
 })
 
