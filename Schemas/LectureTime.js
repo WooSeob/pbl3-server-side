@@ -5,8 +5,8 @@ const LectureTimeSchema = new mongoose.Schema({
         type: String,
         enum: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     },
-    start: Number,
-    finish: Number
+    start: String,
+    finish: String
 });
 // const Course = mongoose.model("Course", CourseSchema);
 

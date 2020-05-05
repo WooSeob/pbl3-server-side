@@ -4,16 +4,13 @@ var Class = require("../Schemas/Class");
 var userRouter = express.Router();
 
 /*
-    회원가입 /register -> /
+    회원가입 user/ (post)
 */
 
 //회원가입
-userRouter.post("/register", function (req, res) {
-<<<<<<< HEAD
-=======
+userRouter.post("/", function (req, res) {
   
   /* 인증여부에 따라 가입이 되고 안되고 구현 해야함 */
->>>>>>> c1f365e85dca9b587c764ea0865a119de5b44631
   User.create({
     username: req.body.username,
     password: req.body.password,
@@ -54,7 +51,7 @@ userRouter.get("/:id", function (req, res) {
 });
 
 //내가 튜터인 클래스들 받아오기
-userRouter.get("/class/tutor", function (req, res) {
+userRouter.get("/tutor", function (req, res) {
   if (req.session.uid) {
     User.findById(req.session.uid, async (err, user) => {
       if (err) {
@@ -75,7 +72,7 @@ userRouter.get("/class/tutor", function (req, res) {
 });
 
 //내가 튜티인 클래스들 받아오기
-userRouter.get("/class/tutee", function (req, res) {
+userRouter.get("/tutee", function (req, res) {
   if (req.session.uid) {
     User.findById(req.session.uid, async (err, user) => {
       if (err) {

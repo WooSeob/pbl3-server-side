@@ -102,7 +102,6 @@ classRouter.post('/', function(req, res){
         });
 
         newClass.save(()=>{
-            let isSuccess = false;
             
             //기본정보
             if(req.body.grade && req.body.class_description){
@@ -118,7 +117,6 @@ classRouter.post('/', function(req, res){
 
                 newClass.addClassData('BasicInfo', basicInfo, (errmsg)=>{
                     if(errmsg){return console.log(errmsg)}
-                    isSuccess = true;
                 })
             }
 
@@ -135,7 +133,6 @@ classRouter.post('/', function(req, res){
 
                 newClass.addClassData('Course', newCourse, (errmsg)=>{
                     if(errmsg){return console.log(errmsg)}
-                    isSuccess = true;
                 })
             }
             
@@ -154,7 +151,6 @@ classRouter.post('/', function(req, res){
 
                 newClass.addClassData('LectureTime', newTime, (errmsg)=>{
                     if(errmsg){return console.log(errmsg)}
-                    isSuccess = true;
                 })
             }
 
@@ -167,7 +163,6 @@ classRouter.post('/', function(req, res){
                 console.log('최대튜티수 추가 호출')
                 newClass.addClassData('MaxTutee', req.body.maxTutee, (errmsg)=>{
                     if(errmsg){return console.log(errmsg)}
-                    isSuccess = true;
                 })
             }
 
@@ -181,7 +176,6 @@ classRouter.post('/', function(req, res){
 
                 newClass.addClassData('SkypeLink', req.body.skypeLink, (errmsg)=>{
                     if(errmsg){return console.log(errmsg)}
-                    isSuccess = true;
                 })
             }
             
@@ -195,21 +189,20 @@ classRouter.post('/', function(req, res){
 
                 newClass.addClassData('Place', req.body.place, (errmsg)=>{
                     if(errmsg){return console.log(errmsg)}
-                    isSuccess = true;
                 })
             }
 
             //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
             tutor.classesAsTutor.push(newClass._id);
             tutor.save(()=>{
-                if(isSuccess){
+                if(newClass.state == ClassConst.state.JOIN_ABLE){
                     console.log('클라이언트 응답 : ' + newClass._id)
                     res.send(newClass._id); 
                 }else{
                     console.log('클라이언트 응답 : fail')
+                    console.log(newClass.classType + '타입에 필요한 정보가 모두 채워지지 않았습니다.')
                     res.send('fail')
                 }
-                
             });
         });
     });
@@ -437,8 +430,9 @@ classRouter.post('/:id/lecture-note', (req, res)=>{
 })
 
 //------------------------------------    출결관리    ------------------------------------
+
 //1. 출결 확인
-classRouter.get('/:id/myattendance', (req, res)=>{
+classRouter.get('/:id/attendance/my', (req, res)=>{
     let userID = req.session.uid
     let targetClassID = req.params.id;
     User.isTuteeOf(userID, targetClassID, ()=>{
