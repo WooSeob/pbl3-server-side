@@ -39,7 +39,7 @@
                 console.log(mail)
                 $.ajax({
                         type: "POST",
-                        url: "/auth/send-email",
+                        url: "/auth/sendemail",
                         data: "email=" + mail,
                         dataType: "text",
                         success: (res)=>{
@@ -56,7 +56,7 @@
                 let mail = $('#webmail').val();
                 $.ajax({
                         type: "POST",
-                        url: "/auth/auth-email",
+                        url: "/auth/authemail",
                         data: "authNum=" + authNum + "&email="+mail, 
                         dataType: "text",
                         success: (res)=>{

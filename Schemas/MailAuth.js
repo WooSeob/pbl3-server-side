@@ -4,7 +4,7 @@ var mongoose = require("mongoose");
 const MailAuthSchema = new mongoose.Schema({
   webmail: String,
   authNum: Number,
-  isAuth:{type:Boolean, default:false}
+  isAuth: Boolean
 });
 
 const Mail = mongoose.model("Mail", MailAuthSchema);

@@ -5,9 +5,7 @@ var router = express.Router();
 var mongoose = require("mongoose");
 const smtpTransport = require("nodemailer-smtp-transport");
 const nodemailer = require("nodemailer");
-
 var Mail = require("../Schemas/MailAuth");
-
 const hknuAddress = "@hknu.ac.kr";
 
 // TODO 비밀번호 암호화 할것
@@ -66,7 +64,7 @@ var randomNumber;
 
 // 회원가입 페이지에서 인증번호 발송 요청
 // 사용자 유저 이메일주소 받아오기
-router.post("/send-email", function (req, res) {
+router.post("/sendemail", function (req, res) {
   //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
   if (req.body.email === "") {
     res.send(
@@ -86,6 +84,7 @@ router.post("/send-email", function (req, res) {
   var mailAuthInfo = new Mail({
     webmail: userEmail,
     authNum: randomNumber,
+    isAuth: false,
   });
 
   mailAuthInfo.save(function (err) {
@@ -119,24 +118,31 @@ router.post("/send-email", function (req, res) {
     var currentHourDB = d.getHours();
     var currentMinuteDB = d.getMinutes();
     var currentSecondDB = d.getSeconds();
+    var deleteAuthInfo;
 
-    Mail.deleteOne({ webmail: userEmail }, function (err) {
-      if (err) {
-        return handleError(err);
-      } else {
-        console.log(
-          "\n***** " +
-            userEmail +
-            " 님 의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
-            currentHourDB +
-            "시 " +
-            currentMinuteDB +
-            "분 " +
-            currentSecondDB +
-            "초) *****"
-        );
-      }
+    Mail.findOne({ webmail: userEmail }, (err, mail) => {
+      deleteAuthInfo = mail.isAuth;
     });
+
+    if (deleteAuthInfo == false) {
+      Mail.deleteOne({ webmail: userWebmail }, function (err) {
+        if (err) {
+          return handleError(err);
+        } else {
+          console.log(
+            "\n***** " +
+              userWebmail +
+              " 님의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
+              currentHourDB +
+              "시 " +
+              currentMinuteDB +
+              "분 " +
+              currentSecondDB +
+              "초) *****"
+          );
+        }
+      });
+    }
   }
 
   // 3분을 기다렸다가, 저장되어있는 Info 삭제 60000 = 1분
@@ -146,13 +152,15 @@ router.post("/send-email", function (req, res) {
 
 // auth라우터에서 라우팅
 // 인증번호 검증
-router.post("/auth-email", function (req, res) {
+router.post("/authemail", function (req, res) {
   let userAuthNum = req.body.authNum;
   let userWebmail = req.body.email + hknuAddress;
 
   // console.log('인증번호(User)  :   '+ userAuthNum);
   console.log("사용자 입력 이메일 주소 : " + userWebmail);
   console.log("사용자 입력 인증번호  :   " + userAuthNum);
+
+  // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
 
   Mail.findOne({ webmail: userWebmail }, (err, mail) => {
     console.log("인증번호 in DB : " + mail.authNum);
@@ -161,10 +169,18 @@ router.post("/auth-email", function (req, res) {
     if (userAuthNum == authNumInDB) {
       console.log("----- " + userWebmail + "님 인증에 성공하였습니다. -----");
 
-      /* 인증여부에 따라 가입이 되고 안되고 구현 해야함 */
-      //mail.isAuth = true;
+      //인증 되면 isAuth 값 true로 바뀜
+      Mail.findOne({ webmail: userWebmail }, (err, mail) => {
+        mail.isAuth = true;
+        mail.save();
+      });
     } else {
       console.log("----- " + userWebmail + "님 인증에 실패하였습니다. -----");
+
+      Mail.findOne({ webmail: userWebmail }, (err, mail) => {
+        mail.isAuth = false;
+        mail.save();
+      });
     }
   });
 });
