@@ -67,12 +67,7 @@ var randomNumber;
 router.post("/sendemail", function (req, res) {
   //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
   if (req.body.email === "") {
-    res.send(
-      `<script type="text/javascript">
-          alert("메일주소를 입력해주세요."); 
-          window.location = 'http://localhost:3000'; 
-      </script>`
-    );
+    res.send("웹메일 주소를 입력해주세요!");
   }
 
   let userEmail = req.body.email + hknuAddress;
