@@ -70,10 +70,10 @@ router.post("/sendemail", function (req, res) {
     res.send("웹메일 주소를 입력해주세요!");
   }
 
-  let userEmail = req.body.email + hknuAddress;
+  let userEmail = req.body.email 
 
   // 메일 보내는 Function - sendMail
-  randomNumber = sendMail(userEmail);
+  randomNumber = sendMail(userEmail+ hknuAddress);
 
   // DB에 저장
   var mailAuthInfo = new Mail({
@@ -94,7 +94,7 @@ router.post("/sendemail", function (req, res) {
 
     console.log(
       "\n***** DB에 메일주소: " +
-        userEmail +
+        userEmail + hknuAddress +
         " , 인증번호: " +
         randomNumber +
         " 추가 됨 *****  (Time : " +
@@ -149,7 +149,7 @@ router.post("/sendemail", function (req, res) {
 // 인증번호 검증
 router.post("/authemail", function (req, res) {
   let userAuthNum = req.body.authNum;
-  let userWebmail = req.body.email + hknuAddress;
+  let userWebmail = req.body.email 
 
   // console.log('인증번호(User)  :   '+ userAuthNum);
   console.log("사용자 입력 이메일 주소 : " + userWebmail);

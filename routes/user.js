@@ -34,7 +34,7 @@ function deleteInfo(userWebmail) {
 }
 
 //회원가입
-userRouter.post("/register", function (req, res) {
+userRouter.post("/user", function (req, res) {
   /* 인증여부에 따라 가입이 되고 안되고 구현 */
   /* 비어있는 칸이 있으면 에러 발생함 - 예외처리 */
   if (req.body.webmail == "") {
@@ -46,7 +46,7 @@ userRouter.post("/register", function (req, res) {
   } else if (req.body.nickname == "") {
     res.send("nickname을 입력해주세요!");
   } else {
-    Mail.findOne({ webmail: req.body.webmail + hknuAddress }, (err, mail) => {
+    Mail.findOne({ webmail: req.body.webmail }, (err, mail) => {
       if (mail.isAuth == true) {
         User.create({
           username: req.body.username,
@@ -58,17 +58,17 @@ userRouter.post("/register", function (req, res) {
           classesAsTutor: [],
         });
 
-        res.send("인증처리가 정상적으로 이루어졌습니다. Create Successfully");
+        res.send("success");
         console.log(
           req.body.webmail +
             hknuAddress +
             " 님의 회원가입이 정상처리 되었습니다."
         );
 
-        deleteInfo(req.body.webmail + hknuAddress);
+        deleteInfo(req.body.webmail);
       } else {
         res.send(
-          "인증처리 되지 않은 Webmail 주소 입니다. Create Unsuccessfully "
+          "fail"
         );
         console.log(
           req.body.webmail +
@@ -76,7 +76,7 @@ userRouter.post("/register", function (req, res) {
             " 님의 회원가입이 정상처리되지 않았습니다."
         );
 
-        deleteInfo(req.body.webmail + hknuAddress);
+        deleteInfo(req.body.webmail);
       }
     });
   }
