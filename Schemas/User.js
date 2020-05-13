@@ -1,24 +1,29 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-    username: String,
-    password: String,
-    nickname: String,
-    webmail: String,
-    point: Number,
-    classesAsTutee: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Class"
-        }
-    ],
-    classesAsTutor: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Class"
-        }
-    ],
-    //데이터 추가중......
+  id: String,
+  password: String,
+  nickname: String,
+
+  major: {
+    type: String,
+    enum: ["컴퓨터", "경영", "화학"],
+  },
+
+  point: Number,
+  classesAsTutee: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+    },
+  ],
+  classesAsTutor: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+    },
+  ],
+  //데이터 추가중......
 });
 
 /*
@@ -31,34 +36,34 @@ const UserSchema = new mongoose.Schema({
     스키마로 모델을 만든다
 */
 
-UserSchema.statics.isTutorOf = function(userID, ClassID, next){
-    this.findById(userID)
-    .then((user)=>{
-        if(user.classesAsTutor.includes(ClassID)){
-            next(null);
-        }else{
-            console.log('해당 강의의 튜터가 아닙니다.')
-        }
+UserSchema.statics.isTutorOf = function (userID, ClassID, next) {
+  this.findById(userID)
+    .then((user) => {
+      if (user.classesAsTutor.includes(ClassID)) {
+        next(null);
+      } else {
+        console.log("해당 강의의 튜터가 아닙니다.");
+      }
     })
-    .catch((err)=>{
-        next(userID + '를 찾지 못했습니다.')
-        //console.log(err)
-    })
+    .catch((err) => {
+      next(userID + "를 찾지 못했습니다.");
+      //console.log(err)
+    });
 };
 
-UserSchema.statics.isTuteeOf = function(userID, ClassID, next){
-    this.findById(userID)
-    .then((user)=>{
-        if(user.classesAsTutee.includes(ClassID)){
-            next(null);
-        }else{
-            console.log('해당 강의의 튜티가 아닙니다.')
-        }
+UserSchema.statics.isTuteeOf = function (userID, ClassID, next) {
+  this.findById(userID)
+    .then((user) => {
+      if (user.classesAsTutee.includes(ClassID)) {
+        next(null);
+      } else {
+        console.log("해당 강의의 튜티가 아닙니다.");
+      }
     })
-    .catch((err)=>{
-        next(userID + '를 찾지 못했습니다.')
-        //console.log(err)
-    })
+    .catch((err) => {
+      next(userID + "를 찾지 못했습니다.");
+      //console.log(err)
+    });
 };
 
 /*
@@ -68,23 +73,23 @@ UserSchema.statics.isTuteeOf = function(userID, ClassID, next){
 */
 
 //User가 그 수업의 튜티인지 확인하는 함수
-UserSchema.methods.isTuteeOf = function(ClassID){
-    if(this.classesAsTutee.includes(ClassID)){
-        console.log(this.id + '는 수업' + ClassID + '의 튜티입니다.')
-        return true;
-    }else{
-        return false;
-    }
+UserSchema.methods.isTuteeOf = function (ClassID) {
+  if (this.classesAsTutee.includes(ClassID)) {
+    console.log(this.id + "는 수업" + ClassID + "의 튜티입니다.");
+    return true;
+  } else {
+    return false;
+  }
 };
 
 //User가 그 수업의 튜터인지 확인하는 함수
-UserSchema.methods.isTutorOf = function(ClassID){
-    if(this.classesAsTutor.includes(ClassID)){
-        console.log(this.id + '는 수업' + ClassID + '의 튜티입니다.')
-        return true;
-    }else{
-        return false;
-    }
+UserSchema.methods.isTutorOf = function (ClassID) {
+  if (this.classesAsTutor.includes(ClassID)) {
+    console.log(this.id + "는 수업" + ClassID + "의 튜티입니다.");
+    return true;
+  } else {
+    return false;
+  }
 };
 
 const User = mongoose.model("User", UserSchema);

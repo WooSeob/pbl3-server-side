@@ -11,9 +11,11 @@ const hknuAddress = "@hknu.ac.kr";
 // TODO 비밀번호 암호화 할것
 // 로그인
 router.post("/login", function (req, res) {
-  var uname = req.body.username;
+  var uname = req.body.id;
   var pwd = req.body.password;
-  User.findOne({ username: uname }, (err, user) => {
+
+  User.findOne({ id: uname }, (err, user) => {
+    console.log(user);
     if (err || user == null) {
       console.log("존재하지않는 아이디");
       res.send("fail");
@@ -68,12 +70,13 @@ router.post("/sendemail", function (req, res) {
   //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
   if (req.body.email === "") {
     res.send("웹메일 주소를 입력해주세요!");
+    console.log("웹메일 주소 입력 안함");
   }
 
-  let userEmail = req.body.email 
+  let userEmail = req.body.email;
 
   // 메일 보내는 Function - sendMail
-  randomNumber = sendMail(userEmail+ hknuAddress);
+  randomNumber = sendMail(userEmail + hknuAddress);
 
   // DB에 저장
   var mailAuthInfo = new Mail({
@@ -94,7 +97,8 @@ router.post("/sendemail", function (req, res) {
 
     console.log(
       "\n***** DB에 메일주소: " +
-        userEmail + hknuAddress +
+        userEmail +
+        hknuAddress +
         " , 인증번호: " +
         randomNumber +
         " 추가 됨 *****  (Time : " +
@@ -116,6 +120,11 @@ router.post("/sendemail", function (req, res) {
     var deleteAuthInfo;
 
     Mail.findOne({ webmail: userEmail }, (err, mail) => {
+      if (err || mail == null) {
+        console.log("존재하지않는 웹메일");
+        res.send("fail");
+        return;
+      }
       deleteAuthInfo = mail.isAuth;
     });
 
@@ -149,7 +158,7 @@ router.post("/sendemail", function (req, res) {
 // 인증번호 검증
 router.post("/authemail", function (req, res) {
   let userAuthNum = req.body.authNum;
-  let userWebmail = req.body.email 
+  let userWebmail = req.body.email;
 
   // console.log('인증번호(User)  :   '+ userAuthNum);
   console.log("사용자 입력 이메일 주소 : " + userWebmail);
@@ -158,19 +167,32 @@ router.post("/authemail", function (req, res) {
   // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
 
   Mail.findOne({ webmail: userWebmail }, (err, mail) => {
+    if (err || mail == null) {
+      console.log("존재하지않는 웹메일");
+      res.send("fail");
+      return;
+    }
+
     console.log("인증번호 in DB : " + mail.authNum);
     var authNumInDB = mail.authNum;
 
     if (userAuthNum == authNumInDB) {
       console.log("----- " + userWebmail + "님 인증에 성공하였습니다. -----");
+      res.send("auth success");
 
       //인증 되면 isAuth 값 true로 바뀜
       Mail.findOne({ webmail: userWebmail }, (err, mail) => {
+        if (err || mail == null) {
+          console.log("존재하지않는 웹메일");
+          res.send("fail");
+          return;
+        }
         mail.isAuth = true;
         mail.save();
       });
     } else {
       console.log("----- " + userWebmail + "님 인증에 실패하였습니다. -----");
+      res.send("auth fail");
 
       Mail.findOne({ webmail: userWebmail }, (err, mail) => {
         mail.isAuth = false;
@@ -213,8 +235,9 @@ function sendMail(email) {
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
+      
     } else {
-      console.log("***** 인증메일이 정상적으로 발송되었습니다! *****");
+      console.log("***** 인증메일이 정상적으로 발송되었습니다! *****"); 
     }
   });
 

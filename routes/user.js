@@ -8,51 +8,26 @@ const hknuAddress = "@hknu.ac.kr";
     회원가입 /register -> /
 */
 
-function deleteInfo(userWebmail) {
-  var d = new Date();
-  var currentHourDB = d.getHours();
-  var currentMinuteDB = d.getMinutes();
-  var currentSecondDB = d.getSeconds();
-
-  Mail.deleteOne({ webmail: userWebmail }, function (err) {
-    if (err) {
-      return handleError(err);
-    } else {
-      console.log(
-        "\n***** " +
-          userWebmail +
-          " 님의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
-          currentHourDB +
-          "시 " +
-          currentMinuteDB +
-          "분 " +
-          currentSecondDB +
-          "초) *****"
-      );
-    }
-  });
-}
-
 //회원가입
-userRouter.post("/user", function (req, res) {
+userRouter.post("/", function (req, res) {
   /* 인증여부에 따라 가입이 되고 안되고 구현 */
   /* 비어있는 칸이 있으면 에러 발생함 - 예외처리 */
-  if (req.body.webmail == "") {
-    res.send("webmail을 입력해주세요!");
-  } else if (req.body.username == "") {
-    res.send("username을 입력해주세요!");
+  if (req.body.id == "") {
+    res.send("id를 입력해주세요!");
   } else if (req.body.password == "") {
     res.send("password를 입력해주세요!");
   } else if (req.body.nickname == "") {
     res.send("nickname을 입력해주세요!");
+  } else if (req.body.major == "") {
+    res.send("major를 입력해주세요!");
   } else {
-    Mail.findOne({ webmail: req.body.webmail }, (err, mail) => {
+    Mail.findOne({ webmail: req.body.id }, (err, mail) => {
       if (mail.isAuth == true) {
         User.create({
-          username: req.body.username,
+          id: req.body.id,
           password: req.body.password,
           nickname: req.body.nickname,
-          webmail: req.body.webmail,
+          major: req.body.major,
           point: 1000,
           classesAsTutee: [],
           classesAsTutor: [],
@@ -60,23 +35,13 @@ userRouter.post("/user", function (req, res) {
 
         res.send("success");
         console.log(
-          req.body.webmail +
-            hknuAddress +
-            " 님의 회원가입이 정상처리 되었습니다."
+          req.body.id+ " 님의 회원가입이 정상처리 되었습니다."
         );
-
-        deleteInfo(req.body.webmail);
       } else {
-        res.send(
-          "fail"
-        );
+        res.send("fail");
         console.log(
-          req.body.webmail +
-            hknuAddress +
-            " 님의 회원가입이 정상처리되지 않았습니다."
+          req.body.id + " 님의 회원가입이 정상처리되지 않았습니다."
         );
-
-        deleteInfo(req.body.webmail);
       }
     });
   }

@@ -7,7 +7,7 @@
 
         <form action="/auth/login" method="post">
         <p>
-            <input id="id" type="text" name="username" placeholder="username">
+            <input id="id" type="text" name="id" placeholder="username">
         </p>
         <p>
             <input id="pw" type="password" name="password" placeholder="password">
@@ -21,7 +21,7 @@
                 $.ajax({
                     type: "POST",
                     url: "/auth/login",
-                    data: "username=" + id + "&password=" + pw,
+                    data: "id=" + id + "&password=" + pw,
                     dataType: "text",
                     success: (res)=>{
                         if(res == 'success'){

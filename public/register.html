@@ -8,25 +8,23 @@
 
         <form action="/user" method="post">
             <p>
-                <input type="text" name="username" placeholder="username">
+                아이디:  &ensp;&ensp; <input id="id" type="text" name="id" placeholder="id">&ensp;@hknu.ac.kr
             </p>
             <p>
-                <input type="text" name="password" placeholder="password">
+                인증번호: &ensp;<input id="authnum" type="text" name="authnum" placeholder="auth number">
             </p>
             <p>
-                <input type="text" name="nickname" placeholder="nickname">
+                비밀번호: &ensp;<input type="text" name="password" placeholder="password">
             </p>
             <p>
-                <input id="webmail" type="text" name="webmail" placeholder="webmail">@hknu.ac.kr
+                닉네임: &ensp;&ensp;  <input type="text" name="nickname" placeholder="nickname">
             </p>
             <p>
-                <input id="authnum" type="text" name="authnum" placeholder="auth number">
+                전공:   &ensp;&ensp;&ensp;&ensp;  <input type="text" name="major" placeholder="major">
             </p>
+            
             <p>
-                <input type="textarea" name="description" placeholder="description">
-            </p>
-            <p>
-                <input type="submit">
+                <input type="submit" value="회원가입">
             </p>
 
             <div id="btn_req_auth">인증번호 요청</div>
@@ -35,7 +33,7 @@
 
             <script>
                 $('#btn_req_auth').click(()=>{
-                let mail = $('#webmail').val();
+                let mail = $('#id').val();
                 console.log(mail)
                 $.ajax({
                         type: "POST",
@@ -53,7 +51,7 @@
 
                 $('#btn_auth').click(()=>{
                 let authNum = $('#authnum').val();
-                let mail = $('#webmail').val();
+                let mail = $('#id').val();
                 $.ajax({
                         type: "POST",
                         url: "/auth/authemail",
@@ -71,5 +69,4 @@
             </script>
         </form>
     </body>
-    
 </HTML>
