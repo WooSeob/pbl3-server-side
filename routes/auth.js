@@ -166,6 +166,7 @@ router.post("/authemail", function (req, res) {
 
     if (userAuthNum == authNumInDB) {
       console.log("----- " + userWebmail + "님 인증에 성공하였습니다. -----");
+      res.send("success");
 
       //인증 되면 isAuth 값 true로 바뀜
       Mail.findOne({ webmail: userWebmail }, (err, mail) => {
@@ -174,6 +175,7 @@ router.post("/authemail", function (req, res) {
       });
     } else {
       console.log("----- " + userWebmail + "님 인증에 실패하였습니다. -----");
+      res.send("fail");
 
       Mail.findOne({ webmail: userWebmail }, (err, mail) => {
         mail.isAuth = false;
