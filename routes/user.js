@@ -33,6 +33,8 @@ function deleteInfo(userWebmail) {
   });
 }
 
+userRouter.use(express.json());
+
 //회원가입
 userRouter.post("/user", function (req, res) {
   /* 인증여부에 따라 가입이 되고 안되고 구현 */
@@ -67,9 +69,7 @@ userRouter.post("/user", function (req, res) {
 
         deleteInfo(req.body.webmail);
       } else {
-        res.send(
-          "fail"
-        );
+        res.send("fail");
         console.log(
           req.body.webmail +
             hknuAddress +
