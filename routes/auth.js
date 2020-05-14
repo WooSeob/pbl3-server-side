@@ -10,6 +10,8 @@ const hknuAddress = "@hknu.ac.kr";
 mongoose.set("useFindAndModify", false);
 
 
+router.use(express.json());
+
 // TODO 비밀번호 암호화 할것
 // 로그인
 router.post("/login", function (req, res) {
@@ -69,11 +71,18 @@ var randomNumber;
 // 회원가입 페이지에서 인증번호 발송 요청
 // 사용자 유저 이메일주소 받아오기
 router.post("/sendemail", function (req, res) {
+  //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
+  if (req.body.email === "") {
+    res.send("fail");
+  }
 
   let userEmail = req.body.email;
 
   // 메일 보내는 Function - sendMail
   randomNumber = sendMail(userEmail + hknuAddress);
+  
+  //클라이언트에게 이메일 보낸주소를 리턴
+  res.send(userEmail + hknuAddress);
 
   Mail.findOne({ webmail: userEmail }, (err, mail) => {
     if (err) {
@@ -221,7 +230,7 @@ router.post("/authemail", function (req, res) {
 
     if (userAuthNum == authNumInDB) {
       console.log("----- " + userWebmail + "님 인증에 성공하였습니다. -----");
-      res.send("auth success");
+      res.send("success");
 
       //인증 되면 isAuth 값 true로 바뀜
       Mail.findOne({ webmail: userWebmail }, (err, mail) => {
@@ -235,7 +244,7 @@ router.post("/authemail", function (req, res) {
       });
     } else {
       console.log("----- " + userWebmail + "님 인증에 실패하였습니다. -----");
-      res.send("auth fail");
+      res.send("fail");
 
       Mail.findOne({ webmail: userWebmail }, (err, mail) => {
         mail.isAuth = false;

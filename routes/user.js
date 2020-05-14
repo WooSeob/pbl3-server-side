@@ -8,6 +8,33 @@ const hknuAddress = "@hknu.ac.kr";
     회원가입 /register -> /
 */
 
+function deleteInfo(userWebmail) {
+  var d = new Date();
+  var currentHourDB = d.getHours();
+  var currentMinuteDB = d.getMinutes();
+  var currentSecondDB = d.getSeconds();
+
+  Mail.deleteOne({ webmail: userWebmail }, function (err) {
+    if (err) {
+      return handleError(err);
+    } else {
+      console.log(
+        "\n***** " +
+          userWebmail +
+          " 님의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
+          currentHourDB +
+          "시 " +
+          currentMinuteDB +
+          "분 " +
+          currentSecondDB +
+          "초) *****"
+      );
+    }
+  });
+}
+
+userRouter.use(express.json());
+
 //회원가입
 userRouter.post("/", function (req, res) {
   /* 인증여부에 따라 가입이 되고 안되고 구현 */
