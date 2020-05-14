@@ -7,6 +7,8 @@ const smtpTransport = require("nodemailer-smtp-transport");
 const nodemailer = require("nodemailer");
 var Mail = require("../Schemas/MailAuth");
 const hknuAddress = "@hknu.ac.kr";
+mongoose.set("useFindAndModify", false);
+
 
 // TODO 비밀번호 암호화 할것
 // 로그인
@@ -67,91 +69,132 @@ var randomNumber;
 // 회원가입 페이지에서 인증번호 발송 요청
 // 사용자 유저 이메일주소 받아오기
 router.post("/sendemail", function (req, res) {
-  //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
-  if (req.body.email === "") {
-    res.send("웹메일 주소를 입력해주세요!");
-    console.log("웹메일 주소 입력 안함");
-  }
 
   let userEmail = req.body.email;
 
   // 메일 보내는 Function - sendMail
   randomNumber = sendMail(userEmail + hknuAddress);
 
-  // DB에 저장
-  var mailAuthInfo = new Mail({
-    webmail: userEmail,
-    authNum: randomNumber,
-    isAuth: false,
-  });
-
-  mailAuthInfo.save(function (err) {
+  Mail.findOne({ webmail: userEmail }, (err, mail) => {
     if (err) {
-      return err;
+      console.log(err + " 에러발생");
+      res.send("fail");
+      return;
     }
 
-    var e = new Date();
-    var currentHour = e.getHours();
-    var currentMinute = e.getMinutes();
-    var currentSecond = e.getSeconds();
+    if (mail == null) {
+      // DB에 저장
+      var mailAuthInfo = new Mail({
+        webmail: userEmail,
+        authNum: randomNumber,
+        isAuth: false
+        
+      });
 
-    console.log(
-      "\n***** DB에 메일주소: " +
-        userEmail +
-        hknuAddress +
-        " , 인증번호: " +
-        randomNumber +
-        " 추가 됨 *****  (Time : " +
-        currentHour +
-        "시 " +
-        currentMinute +
-        "분 " +
-        currentSecond +
-        "초)"
-    );
+      mailAuthInfo.save(function (err) {
+        if (err) {
+          res.send("fail");
+          return err;
+        }
+        var e = new Date();
+        var currentHour = e.getHours();
+        var currentMinute = e.getMinutes();
+        var currentSecond = e.getSeconds();
+
+        console.log(
+          "\n***** DB에 메일주소: " +
+            userEmail +
+            hknuAddress +
+            " , 인증번호: " +
+            randomNumber +
+            " 추가 됨 *****  (Time : " +
+            currentHour +
+            "시 " +
+            currentMinute +
+            "분 " +
+            currentSecond +
+            "초)"
+        );
+      
+      });
+    } else {
+      Mail.findOneAndUpdate(
+        { webmail: userEmail },
+        { authNum: randomNumber },
+        function (err) {
+          if (err) {
+            res.send("fail");
+            console.log("이미 있는 메일주소이긴 하지만 에러가 발생합니다.");
+          }
+          
+          var f = new Date();
+          var currentHour = f.getHours();
+          var currentMinute = f.getMinutes();
+          var currentSecond = f.getSeconds();
+
+          res.send("update success");
+          console.log(
+            "\n***** DB에 메일주소: " +
+              userEmail +
+              hknuAddress +
+              " , 인증번호: " +
+              randomNumber +
+              " 갱신 됨 *****  (Time : " +
+              currentHour +
+              "시 " +
+              currentMinute +
+              "분 " +
+              currentSecond +
+              "초)"
+          );
+          
+        }
+      );
+    }
   });
 
-  // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
-  function deleteInfo() {
-    var d = new Date();
-    var currentHourDB = d.getHours();
-    var currentMinuteDB = d.getMinutes();
-    var currentSecondDB = d.getSeconds();
-    var deleteAuthInfo;
+  // // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
+  // function deleteInfo(userEmail) {
+  //   var d = new Date();
+  //   var currentHourDB = d.getHours();
+  //   var currentMinuteDB = d.getMinutes();
+  //   var currentSecondDB = d.getSeconds();
+  //   var deleteAuthInfo;
 
-    Mail.findOne({ webmail: userEmail }, (err, mail) => {
-      if (err || mail == null) {
-        console.log("존재하지않는 웹메일");
-        res.send("fail");
-        return;
-      }
-      deleteAuthInfo = mail.isAuth;
-    });
+  //   Mail.findOne({ webmail: userEmail }, (err, mail) => {
+  //     if (err || mail == null) {
+  //       console.log("존재하지않는 웹메일");
+  //       console.log(userEmail+ " !~~!")
+  //       res.send("fail");
+  //       return;
+  //     }
+  //     deleteAuthInfo = mail.isAuth;
+  //   });
 
-    if (deleteAuthInfo == false) {
-      Mail.deleteOne({ webmail: userWebmail }, function (err) {
-        if (err) {
-          return handleError(err);
-        } else {
-          console.log(
-            "\n***** " +
-              userWebmail +
-              " 님의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
-              currentHourDB +
-              "시 " +
-              currentMinuteDB +
-              "분 " +
-              currentSecondDB +
-              "초) *****"
-          );
-        }
-      });
-    }
-  }
+  //   if (deleteAuthInfo == false) {
+  //     Mail.deleteOne({ webmail: userWebmail }, function (err) {
+  //       if (err) {
+  //         return handleError(err);
+  //       } else {
+  //         console.log(
+  //           "\n***** " +
+  //             userWebmail +
+  //             " 님의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
+  //             currentHourDB +
+  //             "시 " +
+  //             currentMinuteDB +
+  //             "분 " +
+  //             currentSecondDB +
+  //             "초) *****"
+  //         );
+  //       }
+  //     });
+  //   }
+  // }
 
   // 3분을 기다렸다가, 저장되어있는 Info 삭제 60000 = 1분
-  setTimeout(deleteInfo, 180000);
-  clearTimeout(deleteInfo);
+  // setTimeout(deleteInfo, 18000);
+  // clearTimeout(deleteInfo);
 });
 
 // auth라우터에서 라우팅
@@ -235,9 +278,8 @@ function sendMail(email) {
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
-      
     } else {
-      console.log("***** 인증메일이 정상적으로 발송되었습니다! *****"); 
+      console.log("***** 인증메일이 정상적으로 발송되었습니다! *****");
     }
   });
 
