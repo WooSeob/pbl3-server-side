@@ -36,7 +36,7 @@ function deleteInfo(userWebmail) {
 userRouter.use(express.json());
 
 //회원가입
-userRouter.post("/user", function (req, res) {
+userRouter.post("/", function (req, res) {
   /* 인증여부에 따라 가입이 되고 안되고 구현 */
   /* 비어있는 칸이 있으면 에러 발생함 - 예외처리 */
   if (req.body.webmail == "") {
