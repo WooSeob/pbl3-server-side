@@ -69,13 +69,15 @@ var randomNumber;
 router.post("/sendemail", function (req, res) {
   //메일주소 입력창에 아무것도 입력하지 않으면 alert 발생
   if (req.body.email === "") {
-    res.send("웹메일 주소를 입력해주세요!");
+    res.send("fail");
   }
 
   let userEmail = req.body.email;
 
   // 메일 보내는 Function - sendMail
   randomNumber = sendMail(userEmail + hknuAddress);
+  //클라이언트에게 이메일 보낸주소를 리턴
+  res.send(userEmail + hknuAddress);
 
   // DB에 저장
   var mailAuthInfo = new Mail({
