@@ -23,7 +23,8 @@ const UserSchema = new mongoose.Schema({
       ref: "Class",
     },
   ],
-  //데이터 추가중......
+  ratingAsTutor: Number,
+  ratingAsTutee: Number
 });
 
 /*

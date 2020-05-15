@@ -249,14 +249,18 @@ classRouter.get("/name/:name", function (req, res) {
 classRouter.get("/:id", function (req, res) {
   let targetClassID = req.params.id;
   Class.findById(targetClassID, (err, Class) => {
-    if (err) {
-      console.log(err);
-      return res.send("fail");
-    }
-    res.send(Class);
+    if (err) {console.log(err);return res.send("fail");}
+    
+    //튜터 닉네임 추가해서 응답
+    User.findById(Class.tutor, (err, user)=>{
+        if(err){console.log(err);return res.send("fail");}
+
+        let rData = Class.toObject();
+        rData.tutorNickName = user.nickname
+        res.send(rData);
+    })
   });
 });
-
 //------------------------------------    정보추가    ------------------------------------
 //강의 기본정보 (성적인증이미지url, 소개글) 추가
 classRouter.post("/:id/basic-info", (req, res) => {
@@ -489,8 +493,6 @@ classRouter.post("/:id/lecture-note", (req, res) => {
     });
   });
 });
-//5ebd84d9021ab820281406b2,
-//5ebd84d9021ab820281406b2
 //------------------------------------    출결관리    ------------------------------------
 
 //1. 출결 확인
