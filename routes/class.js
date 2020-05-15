@@ -290,7 +290,9 @@ classRouter.post("/:id/course", (req, res) => {
     link: req.body.link,
   });
 
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     Class.addClassData("Course", targetClassID, newCourse, (errmsg) => {
       if (errmsg) {
         console.log(errmsg);
@@ -313,7 +315,9 @@ classRouter.post("/:id/lecture-time", (req, res) => {
     finish: req.body.time_finish,
   });
 
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     Class.addClassData("LectureTime", targetClassID, newTime, (errmsg) => {
       if (errmsg) {
         console.log(errmsg);
@@ -331,7 +335,9 @@ classRouter.post("/:id/max-tutee", (req, res) => {
   let userID = req.session.uid;
   let numMaxTutee = req.body.maxTutee;
 
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     Class.addClassData("MaxTutee", targetClassID, numMaxTutee, (errmsg) => {
       if (errmsg) {
         console.log(errmsg);
@@ -349,7 +355,9 @@ classRouter.post("/:id/skype", (req, res) => {
   let userID = req.session.uid;
   let skypeLink = req.body.skypeLink;
 
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     Class.addClassData("SkypeLink", targetClassID, skypeLink, (errmsg) => {
       if (errmsg) {
         console.log(errmsg);
@@ -365,11 +373,8 @@ classRouter.get("/:id/start", (req, res) => {
   let userID = req.session.uid;
   let targetClassID = req.params.id;
 
-  User.isTutorOf(userID, targetClassID, (err) => {
-    if (err) {
-      console.log(err);
-      return res.send("fail");
-    }
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
 
     Class.findById(targetClassID, (err, Class) => {
       if (err) {
@@ -411,7 +416,9 @@ classRouter.post("/:id/question", (req, res) => {
   let content = req.body.content;
   let userID = req.session.uid;
 
-  User.isTuteeOf(userID, targetClassID, () => {
+  User.isTuteeOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+    
     //질문추가
     let newQuestion = QnA({
       question: {
@@ -438,7 +445,9 @@ classRouter.post("/:id/question/:qid", (req, res) => {
   let targetQuestion = req.params.qid;
   let content = req.body.content;
   let userID = req.session.uid;
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     let newAnswer = {
       target: targetQuestion,
       content: content,
@@ -478,7 +487,9 @@ classRouter.post("/:id/lecture-note", (req, res) => {
   let title = req.body.title;
   let content = req.body.content;
 
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     //강의노트 추가
     let newNote = new LectureNote({
       title: title,
@@ -499,7 +510,9 @@ classRouter.post("/:id/lecture-note", (req, res) => {
 classRouter.get("/:id/attendance/my", (req, res) => {
   let userID = req.session.uid;
   let targetClassID = req.params.id;
-  User.isTuteeOf(userID, targetClassID, () => {
+  User.isTuteeOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+
     Class.findById(targetClassID, (err, found) => {
       if (err) {
         console.log(errmsg);
@@ -526,7 +539,8 @@ classRouter.get("/:id/attendance", (req, res) => {
   let userID = req.session.uid;
   let targetClassID = req.params.id;
 
-  User.isTutorOf(userID, targetClassID, () => {
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
     //1. 커리큘럼 온라인 실시간 Or 오프라인형 => 인증번호생성
     //2. 질의응답형 => 채팅방생성
     //3. 동영상 강의형의 경우 수업객체를 커리큘럼을 추가될떄 자동으로 생성된다.
@@ -550,7 +564,8 @@ classRouter.post("/:id/attendance", (req, res) => {
   let targetClassID = req.params.id;
   let auth = req.body.auth;
 
-  User.isTuteeOf(userID, targetClassID, () => {
+  User.isTuteeOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
     // ----- 출석 인증 Process -----
     //강의가 InProgress인가?
     //수업.가장최근.인증번호 == 요청번호 && 수업.가장최근.생성일 + 3분 > 지금
@@ -564,7 +579,45 @@ classRouter.post("/:id/attendance", (req, res) => {
       res.send("success");
     });
   });
-});
+}); 
+ 		
+//----------------------------------    유저 평가    ----------------------------------
+// 유저 평가
+classRouter.post("/:cid/rating/:uid", (req, res) => {
+  //1. target Class includes users (userID, targetUserID)
+  //2. userID rates targetUserID for value
+
+  let userID = req.session.uid;
+  let targetClassID = req.params.cid;
+  let targetUserID = req.params.uid;
+  let value = req.body.value;
+
+  if(value < 1 || value > 5 || !value){
+    console.log("평가 점수가 1~5 범위를 벗어났습니다.")
+    res.send("fail");
+  }
+
+  User.isTuteeOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+    //1. 튜티가
+    User.isTutorOf(targetUserID, targetClassID, (err, user)=>{
+      if(err){console.log(err); return res.send("fail");}
+      // 튜터 평가
+      user.rateAsTutor(value);
+      res.send("success")
+    })
+  });
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if(err){console.log(err); return res.send("fail");}
+    //2. 튜터가
+    User.isTuteeOf(targetUserID, targetClassID, (err, user)=>{
+      if(err){console.log(err); return res.send("fail");}
+      // 튜티 평가
+      user.rateAsTutee(value);
+      res.send("success")
+    })
+  });
+}); 
 
 //----------------------------------    수업참여,쳘회    ----------------------------------
 //수업 철회하기

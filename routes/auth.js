@@ -268,6 +268,7 @@ function sendMail(email) {
     smtpTransport({
       service: "gmail",
       host: "smtp.gmail.com",
+      //TODO 개인정보는 json파일로 추출하고, 그 파일은 gitignore에 추가하기 (보안)
       auth: {
         user: "tutor2tutee@gmail.com",
         pass: "ansgovm3!",

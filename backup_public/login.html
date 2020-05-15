@@ -1,0 +1,43 @@
+<HTML>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </head>
+    <body>
+        <h1>Login</h1>
+
+        <form action="/auth/login" method="post">
+        <p>
+            <input id="id" type="text" name="id" placeholder="username">
+        </p>
+        <p>
+            <input id="pw" type="password" name="password" placeholder="password">
+        </p>
+        </form>
+        <div id="btn_login">Login!</div>
+        <script>
+            $('#btn_login').click(()=>{
+                var id = $('#id').val();
+                var pw = $('#pw').val();
+                $.ajax({
+                    type: "POST",
+                    url: "/auth/login",
+                    data: "id=" + id + "&password=" + pw,
+                    dataType: "text",
+                    success: (res)=>{
+                        if(res == 'success'){
+                            //로그인 성공
+                            window.location.replace("/");
+                        }else{
+                            //로그인 실패
+                            alert('로그인실패');
+                        }
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            })
+        </script>
+    </body>
+    
+</HTML>

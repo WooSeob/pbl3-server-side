@@ -41,14 +41,14 @@ UserSchema.statics.isTutorOf = function (userID, ClassID, next) {
   this.findById(userID)
     .then((user) => {
       if (user.classesAsTutor.includes(ClassID)) {
-        next(null);
+        next(null, user);
       } else {
         console.log("해당 강의의 튜터가 아닙니다.");
       }
     })
     .catch((err) => {
-      next(userID + "를 찾지 못했습니다.");
-      //console.log(err)
+      console.log(userID + "를 찾지 못했습니다.")
+      next(err);
     });
 };
 
@@ -56,14 +56,14 @@ UserSchema.statics.isTuteeOf = function (userID, ClassID, next) {
   this.findById(userID)
     .then((user) => {
       if (user.classesAsTutee.includes(ClassID)) {
-        next(null);
+        next(null, user);
       } else {
         console.log("해당 강의의 튜티가 아닙니다.");
       }
     })
     .catch((err) => {
-      next(userID + "를 찾지 못했습니다.");
-      //console.log(err)
+      console.log(userID + "를 찾지 못했습니다.")
+      next(err);
     });
 };
 
@@ -92,6 +92,26 @@ UserSchema.methods.isTutorOf = function (ClassID) {
     return false;
   }
 };
+
+UserSchema.methods.rateAsTutor = async function (value){
+  //TODO 평가 로직
+  let rate = (this.rateAsTutor + value)/2
+  this.rateAsTutor = rate;
+  //저장
+  await this.save(()=>{
+    console.log("평점 업데이트 완료")
+  });
+}
+
+UserSchema.methods.rateAsTutee = async function (value){
+  //평가 로직
+  let rate = (this.rateAsTutee + value)/2
+  this.rateAsTutee = rate;
+  //저장
+  await this.save(()=>{
+    console.log("평점 업데이트 완료")
+  });
+}
 
 const User = mongoose.model("User", UserSchema);
 
