@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
 
   major: {
     type: String,
-    enum: ["컴퓨터", "경영", "화학"],
+    enum: ["컴퓨터공학", "경영", "화학"],
   },
 
   point: Number,

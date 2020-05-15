@@ -17,7 +17,7 @@ router.use(express.json());
 router.post("/login", function (req, res) {
   var uname = req.body.id;
   var pwd = req.body.password;
-
+  console.log(uname)
   User.findOne({ id: uname }, (err, user) => {
     console.log(user);
     if (err || user == null) {

@@ -83,9 +83,9 @@ const ADD_FUNCTIONS_BY_DATATYPE = {
         });
     },
     'LectureNote': async function(Class, Data, Callback){
-        Class.lectureNostes.push(Data)
+        Class.lectureNotes.push(Data)
         await Class.save(()=>{
-            console.log('질문 추가성공')
+            console.log('강의노트 추가성공')
             return Callback(null)
         });
     },
