@@ -180,11 +180,11 @@ classRouter.get("/name/:name", function (req, res) {
   }
 
   Class.find(query)
-    .then((data) => {
+    .then(async (data) =>{
       //튜터 닉네임정보들 추가해서 response
       let rDatas = new Array()
       for(let Class of data){
-        await User.findById(Class.tutor, async(err, user)=>{
+        await User.findById(Class.tutor, (err, user)=>{
           if(err){console.log(err);return res.send("fail");}
   
           let rData = Class.toObject();
