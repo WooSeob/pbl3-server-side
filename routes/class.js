@@ -27,7 +27,7 @@ classRouter.use(express.json());
 //수업생성
 classRouter.post("/", function (req, res) {
   //튜터 아이디로 수업 생성
-  User.findById(req.session.uid, (err, tutor) => {
+  User.findById(req.session.uid, async (err, tutor) => {
     if (err) {
       res.send("fail");
       return;
@@ -48,124 +48,101 @@ classRouter.post("/", function (req, res) {
       state: ClassConst.state.PREPARE,
     });
 
-    newClass.save(() => {
-      //기본정보
-      if (req.body.grade && req.body.class_description) {
-        let basicInfo = new ClassBasicInfo({
-          grade: req.body.grade,
-          description: req.body.class_description,
-        });
-        // TaskQueue.push({
-        //     type: 'BasicInfo',
-        //     data: basicInfo
-        // })
-        console.log("기본정보 추가 호출");
+    //기본정보
+    if (req.body.grade && req.body.class_description) {
+      let basicInfo = new ClassBasicInfo({
+        grade: req.body.grade,
+        description: req.body.class_description,
+      });
+      console.log("기본정보 추가 호출");
 
-        newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //커리큘럼 데이터 있으면 추가
-      if (req.body.course_description) {
-        newCourse = new Course({
-          description: req.body.course_description,
-        });
-        // TaskQueue.push({
-        //     type: 'Course',
-        //     data: newCourse
-        // })
-        console.log("커리큘럼 추가 호출");
-
-        newClass.addClassData("Course", newCourse, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //강의시간 데이터 있으면 추가
-      if (req.body.time_day && req.body.time_start && req.body.time_finish) {
-        newTime = new LectureTime({
-          day: req.body.time_day,
-          start: req.body.time_start,
-          finish: req.body.time_finish,
-        });
-        // TaskQueue.push({
-        //     type: 'LectureTime',
-        //     data: newTime
-        // })
-        console.log("강의시간 추가 호출");
-
-        newClass.addClassData("LectureTime", newTime, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //최대튜티수 데이터 있으면 추가
-      if (req.body.maxTutee) {
-        // TaskQueue.push({
-        //     type: 'MaxTutee',
-        //     data: req.body.maxTutee
-        // })
-        console.log("최대튜티수 추가 호출");
-        newClass.addClassData("MaxTutee", req.body.maxTutee, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //스카이프링크 데이터 있으면 추가
-      if (req.body.skypeLink) {
-        // TaskQueue.push({
-        //     type: 'SkypeLink',
-        //     data: req.body.skypeLink
-        // })
-        console.log("스카이프링크 추가 호출");
-
-        newClass.addClassData("SkypeLink", req.body.skypeLink, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //수업장소 데이터 있으면 추가
-      if (req.body.place) {
-        // TaskQueue.push({
-        //     type: 'Place',
-        //     data: req.body.place
-        // })
-        console.log("수업장소 추가 호출");
-
-        newClass.addClassData("Place", req.body.place, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
-      tutor.classesAsTutor.push(newClass._id);
-      tutor.save(() => {
-        if (newClass.state == ClassConst.state.JOIN_ABLE) {
-          console.log("클라이언트 응답 : " + newClass._id);
-          res.send(newClass._id);
-        } else {
-          console.log("클라이언트 응답 : fail");
-          console.log(
-            newClass.classType +
-              "타입에 필요한 정보가 모두 채워지지 않았습니다."
-          );
-          res.send("fail");
+      newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
         }
       });
-    });
+    }
+
+    //커리큘럼 데이터 있으면 추가
+    if (req.body.course_description) {
+      newCourse = new Course({
+        description: req.body.course_description,
+      });
+      console.log("커리큘럼 추가 호출");
+
+      newClass.addClassData("Course", newCourse, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //강의시간 데이터 있으면 추가
+    if (req.body.time_day && req.body.time_start && req.body.time_finish) {
+      newTime = new LectureTime({
+        day: req.body.time_day,
+        start: req.body.time_start,
+        finish: req.body.time_finish,
+      });
+      console.log("강의시간 추가 호출");
+
+      newClass.addClassData("LectureTime", newTime, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //최대튜티수 데이터 있으면 추가
+    if (req.body.maxTutee) {
+      console.log("최대튜티수 추가 호출");
+      newClass.addClassData("MaxTutee", req.body.maxTutee, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //스카이프링크 데이터 있으면 추가
+    if (req.body.skypeLink) {
+      console.log("스카이프링크 추가 호출");
+
+      newClass.addClassData("SkypeLink", req.body.skypeLink, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //수업장소 데이터 있으면 추가
+    if (req.body.place) {
+      console.log("수업장소 추가 호출");
+
+      newClass.addClassData("Place", req.body.place, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    if (newClass.state == ClassConst.state.JOIN_ABLE) {
+      //AsTutor 항목에 새로 만든 클래스 추가
+      tutor.classesAsTutor.push(newClass._id);
+      //강의 추가
+      await newClass.save(() => {console.log("새로운 강의정보 save")});
+      console.log("dd")
+      await tutor.save(() => {console.log("새로운 강의를 classAsTutor에 추가하고 save")});
+
+      console.log("클라이언트 응답 : " + newClass._id);
+      res.send(newClass._id);
+    } else {
+      console.log("클라이언트 응답 : fail");
+      console.log(
+        newClass.classType +
+          "타입에 필요한 정보가 모두 채워지지 않았습니다."
+      );
+      res.send("fail");
+    }
   });
 });
 

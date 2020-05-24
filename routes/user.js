@@ -102,6 +102,38 @@ userRouter.get("/:id", function (req, res) {
 });
 
 //내가 튜터인 클래스들 받아오기
+userRouter.get("/class", function (req, res) {
+  if (req.session.uid) {
+    User.findById(req.session.uid, async (err, user) => {
+      if (err) {
+        console.log("해당하는 유저를 찾을 수 없습니다.");
+        return res.send("fail");
+      }
+
+      let classes = {
+        AsTutor: new Array(),
+        AsTutee: new Array()
+      }
+
+      //내가 튜터인 강의 추가
+      for (let classID of user.classesAsTutor) {
+        let found = await Class.findById(classID);
+        classes.AsTutor.push(found);
+      }
+
+      //내가 튜티인 강의 추가
+      for (let classID of user.classesAsTutee) {
+        let found = await Class.findById(classID);
+        classes.AsTutee.push(found);
+      }
+      res.send(classes);
+    });
+  } else {
+    res.send("잘못된 접근입니다.");
+  }
+});
+
+//내가 튜터인 클래스들 받아오기
 userRouter.get("/class/tutor", function (req, res) {
   if (req.session.uid) {
     User.findById(req.session.uid, async (err, user) => {

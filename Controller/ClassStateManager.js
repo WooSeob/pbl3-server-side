@@ -1,18 +1,20 @@
 var ClassConst = require('../Const/Class')
 
 const Manager = {
-    checkPrepared: function(Class){
+    checkPrepared: async function(Class){
         //강의 준비완료됬는지 확인하기
         //Prepare -> Joinable
         if(Class.state == ClassConst.state.PREPARE){
             if(ClassConst.isDataPrepared(Class)){
                 Class.state = ClassConst.state.JOIN_ABLE
-                Class.save(()=>{
+                await Class.save(()=>{
                     console.log(Class._id + ' : state changed (Prepare -> Joinable)')
                 })
             }else{
                 console.log('StateManager : 데이터가 모두 준비되지 않았습니다.')
             }
+        }else if(Class.state == ClassConst.state.JOIN_ABLE){
+            
         }else{
             console.log('StateManager : 수업 상태가 Prepare가 아닙니다.')
         }
