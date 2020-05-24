@@ -24,63 +24,6 @@ const Attendance = mongoose.model("Attendance", AttendanceSchema);
 var classRouter = express.Router();
 classRouter.use(express.json());
 
-/*
-    1. 공통정보 CRUD
-        1. Class.basicInfo
-            1. 성적인증 이미지 url 
-            2. 수업소개
-
-    2. 수업타입별 데이터 CRUD
-        1. 커리큘럼 온라인 실시간
-            1. 정보
-                1. 강의시간 V
-                2. 커리큘럼 V
-                3. 최대 튜티수 V
-            2. 기능
-                1. 질의응답
-                2. 수업노트
-                3. 출결관리
-                4. 스카이프 링크 ##
-
-        2. 커리큘럼 온라인 실시간X
-            1. 정보
-                1. 커리큘럼(링크 포함) V
-            2. 기능
-                1. 질의응답
-                2. 출결관리(진도율)
-                3. 강의시청(링크) ##
-
-        3. 질의응답형
-            1. 정보
-                1. 강의시간 V
-            2. 기능
-                1. 질의응답
-                2. 실시간 채팅방 ##
-
-        4. 오프라인형
-            1. 정보
-                1. 강의시간 V
-                2. 커리큘럼 V
-                3. 최대 튜티수 V
-            2. 기능
-                1. 질의응답
-                2. 수업노트
-                3. 출결관리
-
-        1. 기능 라우팅
-            1. 강의시간 V
-            2. 커리큘럼 V
-            3. 최대 튜티수 V
-
-            4. 질의응답 V
-            5. 수업노트 V
-            6. 출결관리 V
-
-            7. 스카이프링크
-            8. 동영상링크 
-            9. 실시간채팅방  
-*/
-
 //수업생성
 classRouter.post("/", function (req, res) {
   //튜터 아이디로 수업 생성
@@ -238,7 +181,14 @@ classRouter.get("/name/:name", function (req, res) {
 
   Class.find(query)
     .then((data) => {
-      res.send(data);
+      //튜터 닉네임정보들 추가해서 response
+      let rDatas = new Array()
+      for(let Class of data){
+        let rData = Class.toObject();
+        rData.tutorNickName = user.nickname
+        rDatas.push(rData)
+      }
+      res.send(rDatas);
     })
     .catch((err) => {
       console.log(err);
