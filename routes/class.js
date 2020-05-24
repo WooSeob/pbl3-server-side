@@ -184,9 +184,13 @@ classRouter.get("/name/:name", function (req, res) {
       //튜터 닉네임정보들 추가해서 response
       let rDatas = new Array()
       for(let Class of data){
-        let rData = Class.toObject();
-        rData.tutorNickName = user.nickname
-        rDatas.push(rData)
+        await User.findById(Class.tutor, async(err, user)=>{
+          if(err){console.log(err);return res.send("fail");}
+  
+          let rData = Class.toObject();
+          rData.tutorNickName = user.nickname
+          rDatas.push(rData)
+        })
       }
       res.send(rDatas);
     })
