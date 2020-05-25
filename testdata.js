@@ -181,108 +181,106 @@ async function resetDB(){
 async function makeClass(data, userID){
     //기본적으로 강의개설직후는 '준비중' 상태
     await User.findOne({id: userID}, async (err, tutor) => {
-        console.log(tutor)
+        if (err) {
+          res.send("fail");
+          return;
+        }
+    
+        console.log("\n|----------- 강의개설 ------------");
+        console.log("| 강 의 명 : " + data.className);
+        console.log("| 강의타입 : " + data.classType);
+    
+        //기본적으로 강의개설직후는 '준비중' 상태
         var newClass = new Class({
-            classType: data.classType,
-            category: data.category,
-            studyAbout: data.studyAbout,
-            className: data.className,
-            price: data.price,
-            tutor: tutor._id,
-            state: ClassConst.state.PREPARE,
+          classType: data.classType,
+          category: data.category,
+          studyAbout: data.studyAbout,
+          className: data.className,
+          price: data.price,
+          tutor: tutor._id,
+          state: ClassConst.state.PREPARE,
         });
-        
+    
         //기본정보
         if (data.grade && data.class_description) {
-            let basicInfo = new ClassBasicInfo({
+          let basicInfo = new ClassBasicInfo({
             grade: data.grade,
             description: data.class_description,
-            });
-            console.log("기본정보 추가 호출");
-        
-            newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
+          });
+          await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
             if (errmsg) {
-                return console.log(errmsg);
+              return console.log(errmsg);
             }
-            });
+          });
         }
-        
+    
         //커리큘럼 데이터 있으면 추가
         if (data.course_description) {
-            newCourse = new Course({
+          newCourse = new Course({
             description: data.course_description,
-            });
-            console.log("커리큘럼 추가 호출");
-        
-            newClass.addClassData("Course", newCourse, (errmsg) => {
+          });
+          await newClass.addClassData("Course", newCourse, (errmsg) => {
             if (errmsg) {
-                return console.log(errmsg);
+              return console.log(errmsg);
             }
-            });
+          });
         }
-        
+    
         //강의시간 데이터 있으면 추가
         if (data.time_day && data.time_start && data.time_finish) {
-            newTime = new LectureTime({
+          newTime = new LectureTime({
             day: data.time_day,
             start: data.time_start,
             finish: data.time_finish,
-            });
-            console.log("강의시간 추가 호출");
-        
-            newClass.addClassData("LectureTime", newTime, (errmsg) => {
+          });
+          await newClass.addClassData("LectureTime", newTime, (errmsg) => {
             if (errmsg) {
-                return console.log(errmsg);
+              return console.log(errmsg);
             }
-            });
+          });
         }
-        
+    
         //최대튜티수 데이터 있으면 추가
         if (data.maxTutee) {
-            console.log("최대튜티수 추가 호출");
-            newClass.addClassData("MaxTutee", data.maxTutee, (errmsg) => {
+          await newClass.addClassData("MaxTutee", data.maxTutee, (errmsg) => {
             if (errmsg) {
-                return console.log(errmsg);
+              return console.log(errmsg);
             }
-            });
+          });
         }
-        
+    
         //스카이프링크 데이터 있으면 추가
         if (data.skypeLink) {
-            console.log("스카이프링크 추가 호출");
-        
-            newClass.addClassData("SkypeLink", data.skypeLink, (errmsg) => {
+          await newClass.addClassData("SkypeLink", data.skypeLink, (errmsg) => {
             if (errmsg) {
-                return console.log(errmsg);
+              return console.log(errmsg);
             }
-            });
+          });
         }
-        
+    
         //수업장소 데이터 있으면 추가
         if (data.place) {
-            console.log("수업장소 추가 호출");
-        
-            newClass.addClassData("Place", data.place, (errmsg) => {
+          await newClass.addClassData("Place", data.place, (errmsg) => {
             if (errmsg) {
-                return console.log(errmsg);
+              return console.log(errmsg);
             }
-            });
+          });
         }
-        
+    
         if (newClass.state == ClassConst.state.JOIN_ABLE) {
-            //AsTutor 항목에 새로 만든 클래스 추가
-            tutor.classesAsTutor.push(newClass._id);
-            //강의 추가
-            await newClass.save(() => {console.log("새로운 강의정보 save")});
-            console.log("dd")
-            await tutor.save(() => {console.log("새로운 강의를 classAsTutor에 추가하고 save")});
-        
+          //AsTutor 항목에 새로 만든 클래스 추가
+          tutor.classesAsTutor.push(newClass._id);
+          //강의 추가
+          await newClass.save(() => {console.log("새로운 강의정보 데이터베이스에 저장")});
+          await tutor.save(() => {console.log("새로운 강의를 classAsTutor에 추가하고 저장")});
+    
+          console.log("클라이언트 응답 : " + newClass._id);
         } else {
-            console.log("클라이언트 응답 : fail");
-            console.log(
+          console.log("클라이언트 응답 : fail");
+          console.log(
             newClass.classType +
-                "타입에 필요한 정보가 모두 채워지지 않았습니다."
-            );
+              "타입에 필요한 정보가 모두 채워지지 않았습니다."
+          );
         }
-    })
+      })
 }
