@@ -78,49 +78,57 @@ let types = [
 
 
 async function mainlogic(){
-    let newUser = makeUser()
+    let newUser = makeUser(1)
     console.log(newUser + "\n테스트 유저 생성 성공")
     
     let selectedType;
     let classCount = 1;
+    let userCount = 2;
     console.log('\n----------------------------')
-    console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 종료\n')
+    console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 유저생성\n7. 종료\n')
     for await (const type of rl){
         if(type === '5'){
             await resetDB();
             console.log('\n----------------------------')
-            console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 종료\n')
+            console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 유저생성\n7. 종료\n')
             newUser = null;
             classCount = 1;
+            userCount = 2;
             continue;
         }else if(type === '6'){
-            process.exit()
-        }
-
-        if(!newUser){
-            newUser = await makeUser()
+            let newUser = await makeUser(userCount++)
             console.log(newUser + "\n테스트 유저 생성 성공")
-        }
-
-        selectedType = types[type - 1] 
+            console.log('\n----------------------------')
+            console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 유저생성\n7. 종료\n')
+            continue;
+        }else if(type === '7'){
+            process.exit()
+        }else{
+            if(!newUser){
+                newUser = await makeUser(1)
+                console.log(newUser + "\n테스트 유저 생성 성공")
+            }
     
-        console.log(`${selectedType} 선택 됐습니다.`);
-    
-        let data = {
-            classType: selectedType,
-            category: "컴퓨터공학",
-            studyAbout: "수업 과목",
-            className: "테스트" + (classCount++),
-            price: 10,
-        }
+            selectedType = types[type - 1] 
         
-        //타입별 데이터세팅
-        additionalDataByTypes[selectedType](data)
-        //생성
-        makeClass(data, "test1")
-
-        console.log('\n----------------------------')
-        console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 종료\n')
+            console.log(`${selectedType} 선택 됐습니다.`);
+        
+            let data = {
+                classType: selectedType,
+                category: "컴퓨터공학",
+                studyAbout: "수업 과목",
+                className: "테스트" + (classCount++),
+                price: 10,
+            }
+            
+            //타입별 데이터세팅
+            additionalDataByTypes[selectedType](data)
+            //생성
+            makeClass(data, "test1")
+    
+            console.log('\n----------------------------')
+            console.log('생성하고자 하는 강의 타입\n1. 실시간 온라인\n2. 동영상 강의형\n3. 질의응답형\n4. 오프라인형\n5. DB모두삭제\n6. 유저생성\n7. 종료\n')
+        }
     }
 }
 
@@ -138,13 +146,13 @@ db.once('open', function(){
 
 mainlogic()
 
-async function makeUser(){
+async function makeUser(num){
     newUser = await User.create({
-        id: "test1",
-        password: "adsf",
-        nickname: "테스트유저1",
+        id: "test" + num,
+        password: "asdf",
+        nickname: "테스트유저" + num,
         major: "컴퓨터공학",
-        point: 100000,
+        point: 10000000,
         classesAsTutee: [],
         classesAsTutor: [],
     });
