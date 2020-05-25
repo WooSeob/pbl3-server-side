@@ -49,6 +49,10 @@ userRouter.post("/", function (req, res) {
     res.send("major를 입력해주세요!");
   } else {
     Mail.findOne({ webmail: req.body.id }, (err, mail) => {
+      if(err){
+        res.send("fail")
+        console.log("알수없는 webmail 주소 : " + req.body.id)
+      }
       if (mail.isAuth == true) {
         User.create({
           id: req.body.id,
