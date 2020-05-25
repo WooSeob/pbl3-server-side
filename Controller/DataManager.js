@@ -7,15 +7,14 @@ const Attendance = new mongoose.model("Attendance", AttendanceSchema)
 
 //데이터 타입별 저장방법
 const ADD_FUNCTIONS_BY_DATATYPE = {
-    'BasicInfo': async function(Class, Data, Callback){
+    'BasicInfo': function(Class, Data, Callback){
         Class.basicInfo = Data;
-        await Class.save(()=>{
-            console.log('기본정보 추가성공')
-            ClassStateManager.checkPrepared(Class);
-            return Callback(null)
-        });
+
+        console.log('기본정보 추가성공')
+        ClassStateManager.checkPrepared(Class);
+        Callback(null, Class)
     },
-    'Course': async function(Class, Data, Callback){
+    'Course': function(Class, Data, Callback){
         Class.courses.push(Data);
         if(Class.classType == 'OnlineCourseType'){
             //TODO 동영상 강의형의 경우 동영상강의가 추가될 때 출석객체도 생성해서 추가해준다.
@@ -24,52 +23,41 @@ const ADD_FUNCTIONS_BY_DATATYPE = {
             })
             Class.participations.push(newAttendance)
         }
-        await Class.save(()=>{
-            console.log('커리큘럼 추가성공')
-            ClassStateManager.checkPrepared(Class);
-            
-            return Callback(null)
-        });
+
+        console.log('커리큘럼 추가성공')
+        ClassStateManager.checkPrepared(Class);    
+        Callback(null, Class)
     },
-    'LectureTime': async function(Class, Data, Callback){
+    'LectureTime': function(Class, Data, Callback){
         Class.lectureTimes.push(Data);
-        await Class.save(()=>{
-            console.log('강의시간 추가성공')
-            ClassStateManager.checkPrepared(Class);
-            return Callback(null)
-        });
+
+        console.log('강의시간 추가성공')
+        ClassStateManager.checkPrepared(Class);
+        Callback(null, Class)
     },
-    'MaxTutee': async function(Class, Data, Callback){
+    'MaxTutee': function(Class, Data, Callback){
         Class.maxTutee = Data;
-        await Class.save(()=>{
-            console.log('최대 튜티 수 추가성공')
-            ClassStateManager.checkPrepared(Class);
-            return Callback(null)
-        });
+        console.log('최대 튜티 수 추가성공')
+        ClassStateManager.checkPrepared(Class);
+        Callback(null, Class)
     },
-    'Place': async function(Class, Data, Callback){
+    'Place': function(Class, Data, Callback){
         Class.place = Data;
-        await Class.save(()=>{
-            console.log('수업장소 추가성공')
-            ClassStateManager.checkPrepared(Class);
-            return Callback(null)
-        });
+        console.log('수업장소 추가성공')
+        ClassStateManager.checkPrepared(Class);
+        Callback(null, Class)
     },
-    'SkypeLink': async function(Class, Data, Callback){
+    'SkypeLink': function(Class, Data, Callback){
         Class.skypeLink = Data;
-        await Class.save(()=>{
-            console.log('스카이프링크 추가성공')
-            return Callback(null)
-        });
+        console.log('스카이프링크 추가성공')
+        Callback(null, Class)
     },
-    'Question': async function(Class, Data, Callback){
+    'Question': function(Class, Data, Callback){
         Class.qnas.push(Data)
-        await Class.save(()=>{
-            console.log('질문 추가성공')
-            return Callback(null)
-        });
+        console.log('질문 추가성공')
+        Callback(null, Class)
     },
-    'Answer': async function(Class, Data, Callback){
+    'Answer': function(Class, Data, Callback){
         //답변 달기           
         let targetQuestion = Class.qnas.id(Data.target)
         if(!targetQuestion){return Callback(Data.target + '에 해당하는 질문이 없습니다.')}
@@ -77,24 +65,18 @@ const ADD_FUNCTIONS_BY_DATATYPE = {
         Class.qnas.id(Data.target).answer = {
             content: Data.content
         }
-        await Class.save(()=>{
-            console.log('답변 추가성공')
-            return Callback(null)
-        });
+        console.log('답변 추가성공')
+        Callback(null, Class)
     },
-    'LectureNote': async function(Class, Data, Callback){
+    'LectureNote': function(Class, Data, Callback){
         Class.lectureNotes.push(Data)
-        await Class.save(()=>{
-            console.log('강의노트 추가성공')
-            return Callback(null)
-        });
+        console.log('강의노트 추가성공')
+        Callback(null, Class)
     },
-    'Attendance': async function(Class, Data, Callback){
+    'Attendance': function(Class, Data, Callback){
         Class.participations.push(Data)
-        await Class.save(()=>{
-            console.log('수업객체 저장 성공')
-            return Callback(null)
-        });
+        console.log('수업객체 저장 성공')
+        Callback(null, Class)
     }
 }
 

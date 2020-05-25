@@ -111,7 +111,6 @@ ClassSchema.methods.addClassData = function (targetDataType, Data, Callback) {
   if (ClassConst.isAccessible(targetDataType, this.classType)) {
     //다큐먼트에 데이터 추가 추가.
     DataManager.addClassDataByDataType(targetDataType, this, Data, Callback);
-    ClassStateManager.checkPrepared(Class);
   } else {
     Callback("이 클래스에는 " + targetDataType + "을 추가 할 수 없습니다.");
   }

@@ -24,73 +24,16 @@ const Attendance = mongoose.model("Attendance", AttendanceSchema);
 var classRouter = express.Router();
 classRouter.use(express.json());
 
-/*
-    1. 공통정보 CRUD
-        1. Class.basicInfo
-            1. 성적인증 이미지 url 
-            2. 수업소개
-
-    2. 수업타입별 데이터 CRUD
-        1. 커리큘럼 온라인 실시간
-            1. 정보
-                1. 강의시간 V
-                2. 커리큘럼 V
-                3. 최대 튜티수 V
-            2. 기능
-                1. 질의응답
-                2. 수업노트
-                3. 출결관리
-                4. 스카이프 링크 ##
-
-        2. 커리큘럼 온라인 실시간X
-            1. 정보
-                1. 커리큘럼(링크 포함) V
-            2. 기능
-                1. 질의응답
-                2. 출결관리(진도율)
-                3. 강의시청(링크) ##
-
-        3. 질의응답형
-            1. 정보
-                1. 강의시간 V
-            2. 기능
-                1. 질의응답
-                2. 실시간 채팅방 ##
-
-        4. 오프라인형
-            1. 정보
-                1. 강의시간 V
-                2. 커리큘럼 V
-                3. 최대 튜티수 V
-            2. 기능
-                1. 질의응답
-                2. 수업노트
-                3. 출결관리
-
-        1. 기능 라우팅
-            1. 강의시간 V
-            2. 커리큘럼 V
-            3. 최대 튜티수 V
-
-            4. 질의응답 V
-            5. 수업노트 V
-            6. 출결관리 V
-
-            7. 스카이프링크
-            8. 동영상링크 
-            9. 실시간채팅방  
-*/
-
 //수업생성
 classRouter.post("/", function (req, res) {
   //튜터 아이디로 수업 생성
-  User.findById(req.session.uid, (err, tutor) => {
+  User.findById(req.session.uid, async (err, tutor) => {
     if (err) {
       res.send("fail");
       return;
     }
 
-    console.log("|----------- 강의개설 ------------");
+    console.log("\n|----------- 강의개설 ------------");
     console.log("| 강 의 명 : " + req.body.className);
     console.log("| 강의타입 : " + req.body.classType);
 
@@ -105,124 +48,92 @@ classRouter.post("/", function (req, res) {
       state: ClassConst.state.PREPARE,
     });
 
-    newClass.save(() => {
-      //기본정보
-      if (req.body.grade && req.body.class_description) {
-        let basicInfo = new ClassBasicInfo({
-          grade: req.body.grade,
-          description: req.body.class_description,
-        });
-        // TaskQueue.push({
-        //     type: 'BasicInfo',
-        //     data: basicInfo
-        // })
-        console.log("기본정보 추가 호출");
-
-        newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //커리큘럼 데이터 있으면 추가
-      if (req.body.course_description) {
-        newCourse = new Course({
-          description: req.body.course_description,
-        });
-        // TaskQueue.push({
-        //     type: 'Course',
-        //     data: newCourse
-        // })
-        console.log("커리큘럼 추가 호출");
-
-        newClass.addClassData("Course", newCourse, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //강의시간 데이터 있으면 추가
-      if (req.body.time_day && req.body.time_start && req.body.time_finish) {
-        newTime = new LectureTime({
-          day: req.body.time_day,
-          start: req.body.time_start,
-          finish: req.body.time_finish,
-        });
-        // TaskQueue.push({
-        //     type: 'LectureTime',
-        //     data: newTime
-        // })
-        console.log("강의시간 추가 호출");
-
-        newClass.addClassData("LectureTime", newTime, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //최대튜티수 데이터 있으면 추가
-      if (req.body.maxTutee) {
-        // TaskQueue.push({
-        //     type: 'MaxTutee',
-        //     data: req.body.maxTutee
-        // })
-        console.log("최대튜티수 추가 호출");
-        newClass.addClassData("MaxTutee", req.body.maxTutee, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //스카이프링크 데이터 있으면 추가
-      if (req.body.skypeLink) {
-        // TaskQueue.push({
-        //     type: 'SkypeLink',
-        //     data: req.body.skypeLink
-        // })
-        console.log("스카이프링크 추가 호출");
-
-        newClass.addClassData("SkypeLink", req.body.skypeLink, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //수업장소 데이터 있으면 추가
-      if (req.body.place) {
-        // TaskQueue.push({
-        //     type: 'Place',
-        //     data: req.body.place
-        // })
-        console.log("수업장소 추가 호출");
-
-        newClass.addClassData("Place", req.body.place, (errmsg) => {
-          if (errmsg) {
-            return console.log(errmsg);
-          }
-        });
-      }
-
-      //이 강의를 개설한 유저의 classesAsTutor 항목에 이 강의 추가
-      tutor.classesAsTutor.push(newClass._id);
-      tutor.save(() => {
-        if (newClass.state == ClassConst.state.JOIN_ABLE) {
-          console.log("클라이언트 응답 : " + newClass._id);
-          res.send(newClass._id);
-        } else {
-          console.log("클라이언트 응답 : fail");
-          console.log(
-            newClass.classType +
-              "타입에 필요한 정보가 모두 채워지지 않았습니다."
-          );
-          res.send("fail");
+    //기본정보
+    if (req.body.grade && req.body.class_description) {
+      let basicInfo = new ClassBasicInfo({
+        grade: req.body.grade,
+        description: req.body.class_description,
+      });
+      await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
         }
       });
-    });
+    }
+
+    //커리큘럼 데이터 있으면 추가
+    if (req.body.course_description) {
+      newCourse = new Course({
+        description: req.body.course_description,
+      });
+      await newClass.addClassData("Course", newCourse, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //강의시간 데이터 있으면 추가
+    if (req.body.time_day && req.body.time_start && req.body.time_finish) {
+      newTime = new LectureTime({
+        day: req.body.time_day,
+        start: req.body.time_start,
+        finish: req.body.time_finish,
+      });
+      await newClass.addClassData("LectureTime", newTime, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //최대튜티수 데이터 있으면 추가
+    if (req.body.maxTutee) {
+      await newClass.addClassData("MaxTutee", req.body.maxTutee, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //스카이프링크 데이터 있으면 추가
+    if (req.body.skypeLink) {
+      await newClass.addClassData("SkypeLink", req.body.skypeLink, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    //수업장소 데이터 있으면 추가
+    if (req.body.place) {
+      await newClass.addClassData("Place", req.body.place, (errmsg) => {
+        if (errmsg) {
+          return console.log(errmsg);
+        }
+      });
+    }
+
+    if (newClass.state == ClassConst.state.JOIN_ABLE) {
+      //AsTutor 항목에 새로 만든 클래스 추가
+      tutor.classesAsTutor.push(newClass._id);
+      //강의 추가
+      await newClass.save(() => {
+        console.log("새로운 강의정보 데이터베이스에 저장");
+      });
+      await tutor.save(() => {
+        console.log("새로운 강의를 classAsTutor에 추가하고 저장");
+      });
+
+      console.log("클라이언트 응답 : " + newClass._id);
+      res.send(newClass._id);
+    } else {
+      console.log("클라이언트 응답 : fail");
+      console.log(
+        newClass.classType + "타입에 필요한 정보가 모두 채워지지 않았습니다."
+      );
+      res.send("fail");
+    }
   });
 });
 
@@ -237,8 +148,22 @@ classRouter.get("/name/:name", function (req, res) {
   }
 
   Class.find(query)
-    .then((data) => {
-      res.send(data);
+    .then(async (data) => {
+      //튜터 닉네임정보들 추가해서 response
+      let rDatas = new Array();
+      for (let Class of data) {
+        await User.findById(Class.tutor, (err, user) => {
+          if (err) {
+            console.log(err);
+            return res.send("fail");
+          }
+
+          let rData = Class.toObject();
+          rData.tutorNickName = user.nickname;
+          rDatas.push(rData);
+        });
+      }
+      res.send(rDatas);
     })
     .catch((err) => {
       console.log(err);
@@ -249,16 +174,22 @@ classRouter.get("/name/:name", function (req, res) {
 classRouter.get("/:id", function (req, res) {
   let targetClassID = req.params.id;
   Class.findById(targetClassID, (err, Class) => {
-    if (err) {console.log(err);return res.send("fail");}
-    
-    //튜터 닉네임 추가해서 응답
-    User.findById(Class.tutor, (err, user)=>{
-        if(err){console.log(err);return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
-        let rData = Class.toObject();
-        rData.tutorNickName = user.nickname
-        res.send(rData);
-    })
+    //튜터 닉네임 추가해서 응답
+    User.findById(Class.tutor, (err, user) => {
+      if (err) {
+        console.log(err);
+        return res.send("fail");
+      }
+
+      let rData = Class.toObject();
+      rData.tutorNickName = user.nickname;
+      res.send(rData);
+    });
   });
 });
 //------------------------------------    정보추가    ------------------------------------
@@ -291,14 +222,19 @@ classRouter.post("/:id/course", (req, res) => {
   });
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
-    Class.addClassData("Course", targetClassID, newCourse, (errmsg) => {
+    Class.addClassData("Course", targetClassID, newCourse, (errmsg, Class) => {
       if (errmsg) {
         console.log(errmsg);
         return res.send("fail");
       }
-      res.send("success");
+      Class.save(() => {
+        res.send("success");
+      });
     });
   });
 });
@@ -316,15 +252,25 @@ classRouter.post("/:id/lecture-time", (req, res) => {
   });
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
-    Class.addClassData("LectureTime", targetClassID, newTime, (errmsg) => {
-      if (errmsg) {
-        console.log(errmsg);
-        return res.send("fail");
+    Class.addClassData(
+      "LectureTime",
+      targetClassID,
+      newTime,
+      (errmsg, Class) => {
+        if (errmsg) {
+          console.log(errmsg);
+          return res.send("fail");
+        }
+        Class.save(() => {
+          res.send("success");
+        });
       }
-      res.send("success");
-    });
+    );
   });
 });
 
@@ -336,15 +282,25 @@ classRouter.post("/:id/max-tutee", (req, res) => {
   let numMaxTutee = req.body.maxTutee;
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
-    Class.addClassData("MaxTutee", targetClassID, numMaxTutee, (errmsg) => {
-      if (errmsg) {
-        console.log(errmsg);
-        return res.send("fail");
+    Class.addClassData(
+      "MaxTutee",
+      targetClassID,
+      numMaxTutee,
+      (errmsg, Class) => {
+        if (errmsg) {
+          console.log(errmsg);
+          return res.send("fail");
+        }
+        Class.save(() => {
+          res.send("success");
+        });
       }
-      res.send("success");
-    });
+    );
   });
 });
 
@@ -356,15 +312,25 @@ classRouter.post("/:id/skype", (req, res) => {
   let skypeLink = req.body.skypeLink;
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
-    Class.addClassData("SkypeLink", targetClassID, skypeLink, (errmsg) => {
-      if (errmsg) {
-        console.log(errmsg);
-        return res.send("fail");
+    Class.addClassData(
+      "SkypeLink",
+      targetClassID,
+      skypeLink,
+      (errmsg, Class) => {
+        if (errmsg) {
+          console.log(errmsg);
+          return res.send("fail");
+        }
+        Class.save(() => {
+          res.send("success");
+        });
       }
-      res.send("success");
-    });
+    );
   });
 });
 
@@ -374,7 +340,10 @@ classRouter.get("/:id/start", (req, res) => {
   let targetClassID = req.params.id;
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
     Class.findById(targetClassID, (err, Class) => {
       if (err) {
@@ -417,8 +386,11 @@ classRouter.post("/:id/question", (req, res) => {
   let userID = req.session.uid;
 
   User.isTuteeOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
-    
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
+
     //질문추가
     let newQuestion = QnA({
       question: {
@@ -426,13 +398,20 @@ classRouter.post("/:id/question", (req, res) => {
         content: content,
       },
     });
-    Class.addClassData("Question", targetClassID, newQuestion, (errmsg) => {
-      if (errmsg) {
-        console.log(errmsg);
-        return res.send("fail");
+    Class.addClassData(
+      "Question",
+      targetClassID,
+      newQuestion,
+      (errmsg, Class) => {
+        if (errmsg) {
+          console.log(errmsg);
+          return res.send("fail");
+        }
+        Class.save(() => {
+          res.send("success");
+        });
       }
-      res.send("success");
-    });
+    );
   });
 });
 //QnA 답변 추가
@@ -446,18 +425,23 @@ classRouter.post("/:id/question/:qid", (req, res) => {
   let content = req.body.content;
   let userID = req.session.uid;
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
     let newAnswer = {
       target: targetQuestion,
       content: content,
     };
-    Class.addClassData("Answer", targetClassID, newAnswer, (errmsg) => {
+    Class.addClassData("Answer", targetClassID, newAnswer, (errmsg, Class) => {
       if (errmsg) {
         console.log(errmsg);
         return res.send("fail");
       }
-      res.send("success");
+      Class.save(() => {
+        res.send("success");
+      });
     });
   });
 });
@@ -488,20 +472,30 @@ classRouter.post("/:id/lecture-note", (req, res) => {
   let content = req.body.content;
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
     //강의노트 추가
     let newNote = new LectureNote({
       title: title,
       content: content,
     });
-    Class.addClassData("LectureNote", targetClassID, newNote, (errmsg) => {
-      if (errmsg) {
-        console.log(errmsg);
-        return res.send("fail");
+    Class.addClassData(
+      "LectureNote",
+      targetClassID,
+      newNote,
+      (errmsg, Class) => {
+        if (errmsg) {
+          console.log(errmsg);
+          return res.send("fail");
+        }
+        Class.save(() => {
+          res.send("success");
+        });
       }
-      res.send("success");
-    });
+    );
   });
 });
 //------------------------------------    출결관리    ------------------------------------
@@ -511,7 +505,10 @@ classRouter.get("/:id/attendance/my", (req, res) => {
   let userID = req.session.uid;
   let targetClassID = req.params.id;
   User.isTuteeOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
 
     Class.findById(targetClassID, (err, found) => {
       if (err) {
@@ -540,7 +537,10 @@ classRouter.get("/:id/attendance", (req, res) => {
   let targetClassID = req.params.id;
 
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
     //1. 커리큘럼 온라인 실시간 Or 오프라인형 => 인증번호생성
     //2. 질의응답형 => 채팅방생성
     //3. 동영상 강의형의 경우 수업객체를 커리큘럼을 추가될떄 자동으로 생성된다.
@@ -565,7 +565,10 @@ classRouter.post("/:id/attendance", (req, res) => {
   let auth = req.body.auth;
 
   User.isTuteeOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
     // ----- 출석 인증 Process -----
     //강의가 InProgress인가?
     //수업.가장최근.인증번호 == 요청번호 && 수업.가장최근.생성일 + 3분 > 지금
@@ -579,8 +582,8 @@ classRouter.post("/:id/attendance", (req, res) => {
       res.send("success");
     });
   });
-}); 
- 		
+});
+
 //----------------------------------    유저 평가    ----------------------------------
 // 유저 평가
 classRouter.post("/:cid/rating/:uid", (req, res) => {
@@ -592,32 +595,44 @@ classRouter.post("/:cid/rating/:uid", (req, res) => {
   let targetUserID = req.params.uid;
   let value = req.body.value;
 
-  if(value < 1 || value > 5 || !value){
-    console.log("평가 점수가 1~5 범위를 벗어났습니다.")
+  if (value < 1 || value > 5 || !value) {
+    console.log("평가 점수가 1~5 범위를 벗어났습니다.");
     res.send("fail");
   }
 
   User.isTuteeOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
     //1. 튜티가
-    User.isTutorOf(targetUserID, targetClassID, (err, user)=>{
-      if(err){console.log(err); return res.send("fail");}
+    User.isTutorOf(targetUserID, targetClassID, (err, user) => {
+      if (err) {
+        console.log(err);
+        return res.send("fail");
+      }
       // 튜터 평가
       user.rateAsTutor(value);
-      res.send("success")
-    })
+      res.send("success");
+    });
   });
   User.isTutorOf(userID, targetClassID, (err, user) => {
-    if(err){console.log(err); return res.send("fail");}
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
     //2. 튜터가
-    User.isTuteeOf(targetUserID, targetClassID, (err, user)=>{
-      if(err){console.log(err); return res.send("fail");}
+    User.isTuteeOf(targetUserID, targetClassID, (err, user) => {
+      if (err) {
+        console.log(err);
+        return res.send("fail");
+      }
       // 튜티 평가
       user.rateAsTutee(value);
-      res.send("success")
-    })
+      res.send("success");
+    });
   });
-}); 
+});
 
 //----------------------------------    수업참여,쳘회    ----------------------------------
 //수업 철회하기
