@@ -57,7 +57,18 @@ app.get('/', function(req, res){
     res.send('<h1>Hello home page</h1>');
 });
 
-app.listen(3000, function(){
-    console.log('Connected 3000 port!');
-});
+var Server = require('http').createServer(app);
 
+//socket.io 설정
+var io = require('socket.io')(Server);
+var handler = require('./chat').getHandler(io)
+io.sockets.on('connect', handler)
+
+//서버 시작
+Server.listen(3000, ()=>{
+  console.log('Connected 3000 port!');
+})
+
+// app.listen(3000, function(){
+//     console.log('Connected 3000 port!');
+// });
