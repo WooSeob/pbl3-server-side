@@ -812,7 +812,7 @@ classRouter.post("/search", function (req, res) {
             }
           });
           res.send(searchingArr);
-          console.log("강의명 : "+ userSearch + " - 수요 집계 DB에 저장됨")
+          console.log("강의명 : " + userSearch + " - 수요 집계 DB에 저장됨");
           alreadyInDB = true;
         } else {
           // 수요집계 DB에 있는 모든 lecture에 대해 키워드 갖고있는지 확인
@@ -839,7 +839,7 @@ classRouter.post("/search", function (req, res) {
               res.send("fail");
               return err;
             }
-            console.log("강의명 : "+ userSearch + " - 수요 집계 DB에 저장됨")
+            console.log("강의명 : " + userSearch + " - 수요 집계 DB에 저장됨");
             res.send(searchingArr);
           });
         }

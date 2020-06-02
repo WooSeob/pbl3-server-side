@@ -6,4 +6,9 @@ const LectureDemandSchema = new mongoose.Schema({
   count: Number
 });
 
+
+LectureDemandSchema.statics.sort = function(count, Callback){
+  
+}
 module.exports = LectureDemandSchema;
+
