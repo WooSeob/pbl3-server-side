@@ -14,12 +14,17 @@ var LectureTimeSchema = require("../Schemas/LectureTime");
 var LectureNoteSchema = require("../Schemas/LectureNote");
 var AttendanceSchema = require("../Schemas/Participation");
 
+var LectureDemandSchema = require("../Schemas/LectureDemand");
+
+
 const QnA = mongoose.model("QnA", QnASchema);
 const Course = mongoose.model("Course", CourseSchema);
 const ClassBasicInfo = mongoose.model("ClassBasicInfo", ClassBasicInfoSchema);
 const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
 const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
+
+const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
 
 var classRouter = express.Router();
 classRouter.use(express.json());
@@ -758,4 +763,7 @@ classRouter.get("/:id/join", function (req, res) {
   });
 });
 
+// classRouter.post("/", function(req, res){
+
+// })
 module.exports = classRouter;
