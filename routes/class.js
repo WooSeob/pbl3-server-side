@@ -74,13 +74,13 @@ classRouter.post("/", function (req, res) {
     }
 
     //강의시간 데이터 있으면 추가
-    if (req.body.time_day && req.body.time_start && req.body.time_finish) {
-      newTime = new LectureTime({
-        day: req.body.time_day,
-        start: req.body.time_start,
-        finish: req.body.time_finish,
-      });
-      await newClass.addClassData("LectureTime", newTime, (errmsg) => {
+    if (req.body.lectureTimes) {
+      let Times = new Array();
+      for(let lectureTime of req.body.lectureTimes){
+        Times.push(new LectureTime(lectureTime))
+      }
+      
+      await newClass.addClassData("LectureTime", Times, (errmsg) => {
         if (errmsg) {
           return console.log(errmsg);
         }

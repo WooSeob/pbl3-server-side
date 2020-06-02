@@ -4,6 +4,7 @@ const ClassStateManager = require("./ClassStateManager");
 
 const AttendanceSchema = require("../Schemas/Participation");
 const Attendance = new mongoose.model("Attendance", AttendanceSchema)
+const ChatLog = mongoose.model("ChatLog", require("../Schemas/ChatLog"));
 
 //데이터 타입별 저장방법
 const ADD_FUNCTIONS_BY_DATATYPE = {
@@ -15,6 +16,7 @@ const ADD_FUNCTIONS_BY_DATATYPE = {
         Callback(null, Class)
     },
     'Course': function(Class, Data, Callback){
+        //TODO @param Data 배열로 감싸서 보내주고, push 말고 concat으로 추가하기!
         Class.courses.push(Data);
         if(Class.classType == 'OnlineCourseType'){
             //TODO 동영상 강의형의 경우 동영상강의가 추가될 때 출석객체도 생성해서 추가해준다.
@@ -29,8 +31,10 @@ const ADD_FUNCTIONS_BY_DATATYPE = {
         Callback(null, Class)
     },
     'LectureTime': function(Class, Data, Callback){
-        Class.lectureTimes.push(Data);
-
+        //TODO @Param Data : [LectureTime]
+        for(let time of Data){
+            Class.lectureTimes.push(time);
+        }
         console.log('강의시간 추가성공')
         ClassStateManager.checkPrepared(Class);
         Callback(null, Class)
@@ -76,6 +80,11 @@ const ADD_FUNCTIONS_BY_DATATYPE = {
     'Attendance': function(Class, Data, Callback){
         Class.participations.push(Data)
         console.log('수업객체 저장 성공')
+        Callback(null, Class)
+    },
+    'ChattingRoom': function(Class, Data, Callback){
+        Class.chattingRoom = Data
+        console.log('채팅방 채널 저장 성공')
         Callback(null, Class)
     }
 }
@@ -184,18 +193,25 @@ const GENERATE_ATTENDANCE_FUNCTIONS_BY_CLASS_TYPE = {
     //질의응답형의 출석방법
     'QnAType': function(Class, Callback){
         //채팅방 생성
-        //TODO 채팅방 생성하기
-        let newChattingRoom = 'http://localhost:3000/'
+
+        //채팅방 DB생성
+        var newChattingRoom = new ChatLog({
+            class: Class._id
+        })
+        newChattingRoom.save(()=>{
+            console.log("채팅방 " + newChattingRoom._id + " 생성");
+        })
+
         //출석 객체 생성
         let newAttendance = new Attendance()
 
         //채팅방 주소 저장
-        Class.chattingRoom = newChattingRoom
+        Class.chattingRoom = newChattingRoom._id
         //출석 객체 저장
         Class.participations.push(newAttendance)
         Class.save(()=>{
             console.log('출석 객체, 채팅방 주소 저장, 채팅방 주소 : ' + newChattingRoom)
-            Callback(null, newChattingRoom);
+            Callback(null, newChattingRoom._id);
         })
     },
     //오프라인형의 출석방법

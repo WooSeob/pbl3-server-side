@@ -49,9 +49,9 @@ userRouter.post("/", function (req, res) {
     res.send("major를 입력해주세요!");
   } else {
     Mail.findOne({ webmail: req.body.id }, (err, mail) => {
-      if(err){
-        res.send("fail")
-        console.log("알수없는 webmail 주소 : " + req.body.id)
+      if (err) {
+        res.send("fail");
+        console.log("알수없는 webmail 주소 : " + req.body.id);
       }
       if (mail.isAuth == true) {
         User.create({
@@ -65,14 +65,10 @@ userRouter.post("/", function (req, res) {
         });
 
         res.send("success");
-        console.log(
-          req.body.id+ " 님의 회원가입이 정상처리 되었습니다."
-        );
+        console.log(req.body.id + " 님의 회원가입이 정상처리 되었습니다.");
       } else {
         res.send("fail");
-        console.log(
-          req.body.id + " 님의 회원가입이 정상처리되지 않았습니다."
-        );
+        console.log(req.body.id + " 님의 회원가입이 정상처리되지 않았습니다.");
       }
     });
   }
@@ -116,8 +112,8 @@ userRouter.get("/class", function (req, res) {
 
       let classes = {
         AsTutor: new Array(),
-        AsTutee: new Array()
-      }
+        AsTutee: new Array(),
+      };
 
       //내가 튜터인 강의 추가
       for (let classID of user.classesAsTutor) {

@@ -43,7 +43,7 @@ const DATA_ACCESS_PERMISSION_BY_CLASS_TYPE = {
 
     'Attendance': ['RealtimeOnlineCourseType', 'OnlineCourseType', 'QnAType', 'OfflineType'],
 
-    'chattingRoom': ['QnAType']
+    'ChattingRoom': ['QnAType']
 }
 
 module.exports = {
@@ -58,7 +58,7 @@ module.exports = {
         if(DATA_ACCESS_PERMISSION_BY_CLASS_TYPE[dataType]){
             return DATA_ACCESS_PERMISSION_BY_CLASS_TYPE[dataType].includes(classType)
         }else{
-            console.log(LogString + dataType + '타입에 대한 정보가 없습니다.')
+            console.log(dataType + '타입에 대한 정보가 없습니다.')
             return false
         }
     }
