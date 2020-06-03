@@ -770,6 +770,9 @@ classRouter.post("/search", function (req, res) {
   // 중복 여부를 위한 변수
   var alreadyInDB = false;
   var sortedArr;
+  var today = new Date();
+  
+  
   // 모든 Class 조회
   Class.find({}, "className tutor", (err, found) => {
     if (err) {
@@ -785,6 +788,7 @@ classRouter.post("/search", function (req, res) {
     // 검색 결과 존재
     if (searchingArr.length > 0) {
       res.send(searchingArr);
+      
     } else if (searchingArr.length == 0) {
       //검색결과 존재 안함
       // res.send(searchingArr);
@@ -801,6 +805,7 @@ classRouter.post("/search", function (req, res) {
           var lectureSearch = new LectureDemand({
             lecture: userSearch,
             count: 1,
+            date: today.toLocaleDateString()
           });
 
           lectureSearch.save(function (err) {
@@ -817,10 +822,11 @@ classRouter.post("/search", function (req, res) {
           demand.forEach(function (element) {
             if (
               element.lecture.indexOf(userSearch) != -1 ||
-              userSearch.includes(element.lecture) == 1
+              userSearch.includes(element.lecture) == 1 &&
+              element.date == today.toLocaleDateString()
             ) {
               element.count++;
-              console.log("강의명 : " + userSearch + " - 수요 1 증가");
+              console.log("날짜 : " +today.toLocaleDateString()+ " 강의명 : " + userSearch + " - 수요 1 증가");
               element.save();
               alreadyInDB = true;
               res.send(searchingArr);
@@ -833,6 +839,7 @@ classRouter.post("/search", function (req, res) {
           var lectureSearch = new LectureDemand({
             lecture: userSearch,
             count: 1,
+            date: today.toLocaleDateString()
           });
 
           lectureSearch.save(function (err) {
@@ -845,8 +852,11 @@ classRouter.post("/search", function (req, res) {
           });
         }
       });
+      // 정렬
+      setTimeout(sort, 1700);
     }
   });
+  
   // 정렬 함수
   function sort() {
     LectureDemand.sorting((err, sort) => {
@@ -858,7 +868,6 @@ classRouter.post("/search", function (req, res) {
     });
   }
 
-  // 작업 끝난 후 정렬
-  setTimeout(sort, 1700);
+
 });
 module.exports = classRouter;
