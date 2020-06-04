@@ -1,6 +1,8 @@
 var mongoose = require("mongoose");
 var User = require("./Schemas/User");
 var Class = require("./Schemas/Class");
+var Category = mongoose.model("Category", require("./Schemas/Category"));
+
 var ClassConst = require("./Const/Class");
 
 var QnASchema = require("./Schemas/QnA");
@@ -73,43 +75,7 @@ let additionalDataByTypes = {
     //최대튜티수
     data.maxTutee = 3;
     //강의시간
-    data.lectureTimes = [
-      {
-        day: "Mon",
-        finish:  "2359",
-        start:  "0000"
-      },
-      {
-        day: "Tue",
-        finish:  "2359",
-        start:  "0000"
-      },
-      {
-        day: "Wed",
-        finish:  "2359",
-        start:  "0000"
-      },
-      {
-        day: "Thu",
-        finish:  "2359",
-        start:  "0000"
-      },
-      {
-        day: "Fri",
-        finish:  "2359",
-        start:  "0000"
-      },
-      {
-        day: "Sat",
-        finish:  "2359",
-        start:  "0000"
-      },
-      {
-        day: "Sun",
-        finish:  "2359",
-        start:  "0000"
-      }
-    ];
+    data.lectureTimes =TIME_ALLDAY
   },
   OnlineCourseType: (data) => {
     //기본정보
@@ -176,6 +142,33 @@ async function mainlogic() {
       continue;
     } else if (type === "7") {
       process.exit();
+    } else if (type === "8") {
+      //카테고리 생성
+      // makeCategory("MAJOR", "컴퓨터", ["컴퓨터구조", "알고리즘", "자료구조"])
+      // makeCategory("MAJOR", "전기전자제어공학", ["전전제 과목1", "전전제 과목2"])
+      // makeCategory("MAJOR", "기계공학과", ["기공 과목1", "기공 과목2"])
+      // makeCategory("MAJOR", "화학공학과", ["화공 과목1", "화공 과목2"])
+
+    }else if (type === "9") {
+      //카테고리 생성
+      // makeCategory("INTERESTS", "스포츠", ["축구", "농구", "야구"])
+      // makeCategory("INTERESTS", "원예", ["꽃꽃이", "플라워 공예"])
+
+    }else if (type === "10") {
+      //CategoryManager 테스트
+      let cm = require("./Controller/CategoryManager")
+
+      // console.log(await cm.Major.get());
+      // console.log(await cm.Interests.get());
+      // console.log(await cm.Major.getSubItems("컴퓨터공학"))
+      // console.log(await cm.Interests.getSubItems("스포츠"))
+      cm.Major.addCategory("기계공학")
+      //cm.Major.addCategory("전기전자제어공학")
+
+      // cm.test.exCompare("한경한경컴퓨터공학과", "컴공")
+      // cm.test.exCompare("전기전자제어공학과", "전전제")
+      // cm.test.exCompare("전기전자제어공학과", "전정제")
+
     } else {
       if (!newUser) {
         newUser = await makeUser(1);
@@ -219,6 +212,15 @@ db.once("open", function () {
 });
 
 mainlogic();
+
+async function makeCategory(type, name, subItems){
+  // let newCategory = await Category.create({
+  //   type: type,
+  //   name: name,
+  //   subItems: subItems
+  // })
+  // return newCategory
+}
 
 async function makeUser(num) {
   newUser = await User.create({
@@ -304,7 +306,6 @@ async function makeClass(data, userID) {
       });
     }
 
-    //TODO 서버에도 변경사항 적용!!!!!!!!!!!!!!
     //강의시간 데이터 있으면 추가
     if (data.lectureTimes) {
       let Times = new Array();
