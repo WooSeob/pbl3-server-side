@@ -250,6 +250,7 @@ classRouter.post("/:id/lecture-time", (req, res) => {
   let targetClassID = req.params.id;
   let userID = req.session.uid;
 
+  //TODO 배열로 받아서 추가하도록 변경
   var newTime = new LectureTime({
     day: req.body.time_day,
     start: req.body.time_start,

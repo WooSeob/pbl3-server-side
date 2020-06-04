@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
+    "fast-levenshtein": "^2.0.6",
     "jade": "^1.11.0",
     "mogodb": "0.0.1-security",
     "mogoose": "0.0.1-security",
