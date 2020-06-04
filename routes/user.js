@@ -179,4 +179,10 @@ userRouter.get("/class/tutee", function (req, res) {
   }
 });
 
+// // ----------------------- 강의 추천 시스템 -----------------------
+// userRouter.get("/suggestion", function(req, res){
+   
+// })
+
+
 module.exports = userRouter;
