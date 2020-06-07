@@ -6,34 +6,10 @@ mongoose.connect("mongodb://localhost:27017/test", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-const db = mongoose.connection;
-db.on("error", console.error);
-db.once("open", async function () {
-  console.log("Connection to mongoDB");
-
-  //비동기 호출 문제 때문에 setTimeout으로 호출하고있음
-  for (let i = 0; i < mDatas.length; i++) {
-    console.log("타임아웃설정 " + mDatas[i]);
-    setTimeout(test1, 700 * i);
-  }
-});
-
-function test1() {
-  console.log("\n--------------키워드 추가 시작----------------");
-  //아래 함수 파라미터 값으로 카테고리 추가 할 수 있음
-  cm.Major.addCategory(mDatas[cnt++]);
-}
-
-var cnt = 0;
 
 const testData = [
-  //DB에 데이터들이 모여있을때 아래 데이터들을 추가해서 어떻게 분류되는지 확인할것
-  "전기",
-  "디쟈인",
-  "의예과",
-  "음악",
-  "예술",
-  "미용",
+  //DB에 데이터들이 모여있을때 아래 데이터들을 추가해서 어떻게 분류되는지 확인할
+  ""
 ];
 
 const mDatas = [
@@ -122,6 +98,48 @@ const iDatas = [
   "액티비티",
   "엑티비티",
 ];
+
+//데이터 셋 설정은 아래 DATA 를 수정할것
+var DATA = testData;
+var cnt = 0;
+
+const db = mongoose.connection;
+db.on("error", console.error);
+db.once("open", async function () {
+  console.log("Connection to mongoDB");
+
+  const Category = mongoose.model("Category", require("./Schemas/Category"));
+  Category.init()
+  .then(async ()=>{
+    // 비동기 호출 문제 때문에 setTimeout으로 호출하고있음
+    for (let i = 0; i < DATA.length; i++) {
+      console.log("타임아웃설정 " + DATA[i]);
+      setTimeout(search, 700 * i);
+    }
+    // searchOptimization()
+    // console.log(await cm.Major.get())
+  })  
+});
+
+async function searchOptimization(){
+  let result
+  result = await cm.searchOptimization(true, testData[0], {
+    categoryID: "5edd334d774f4b2df8b2ace0",
+    accurate: false
+  })
+  console.log(result)
+}
+
+async function search(){
+  let result = await cm.Search(DATA[cnt++])
+  console.log("검색결과 매칭 : " + result.isMatched + ", 가장 유사한 카테고리 : " + result.minDistCategory)
+}
+
+async function test1() {
+  console.log("\n--------------키워드 추가 시작----------------");
+  //아래 함수 파라미터 값으로 카테고리 추가 할 수 있음
+  await cm.Major.addCategory(DATA[cnt++]);
+}
 
 async function test2() {
   cm.Interests.addCategory(iDatas[cnt++]);

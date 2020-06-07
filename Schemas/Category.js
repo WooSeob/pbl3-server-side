@@ -7,10 +7,18 @@ const CategorySchema = new mongoose.Schema({
   },
   representation: String,
   keywords: [
-    {
-      type: String,
-    },
+    new mongoose.Schema({
+      key: String,
+      count: {
+        type: Number,
+        default: 1,
+      },
+    }),
   ],
+  maxCnt: {
+    type: Number,
+    default: 1
+  },
   subItems: [
     new mongoose.Schema({
       representation: String,
@@ -22,6 +30,15 @@ const CategorySchema = new mongoose.Schema({
     }),
   ],
 });
+
+CategorySchema.statics.getAllItems = async function () {
+  let Item = [];
+  await this.find({}, (err, found) => {
+    //console.log(found)
+    Item = found;
+  });
+  return Item;
+};
 
 CategorySchema.statics.getItemsByType = async function (type) {
   let Item = [];

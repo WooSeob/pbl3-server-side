@@ -250,7 +250,11 @@ async function resetDB() {
 
           db.dropCollection("chatlogs", async function (err, result) {
             await console.log("채팅로그 삭제");
-            console.log("모두 삭제됐습니다.");
+
+            db.dropCollection("categories", async function (err, result) {
+              await console.log("카테고리 삭제");
+              console.log("모두 삭제됐습니다.");
+            });
           });
         });
       });
