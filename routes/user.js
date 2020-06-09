@@ -3,7 +3,7 @@ var User = require("../Schemas/User");
 var Class = require("../Schemas/Class");
 var userRouter = express.Router();
 var Mail = require("../Schemas/MailAuth");
-const hknuAddress = "@hknu.ac.kr";
+
 /*
     회원가입 /register -> /
 */
