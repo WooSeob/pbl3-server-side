@@ -38,9 +38,7 @@ async function addKeywordsToProperCategory(type, queryKeyword, FeedBack) {
 
 async function findMatchingCategory(type, queryKeyword, FeedBack) {
   let Categories = await Category.getItemsByType(type);
-  console.log("findMatchingCategory~~~~~~~~~~")
-  console.log(Categories)
-  console.log(queryKeyword);
+  // console.log(Categories)
 
   //이미 키워드가 존재 할 때
   for (let c of Categories) {
@@ -67,7 +65,8 @@ async function findMatchingCategory(type, queryKeyword, FeedBack) {
           isMatched: true,
           isProcessed: true,
           queryKeyword: queryKeyword,
-          minDistCategory: saveResult
+          minDistCategory: saveResult,
+          minDistance: 0
         };
         return result;
       }
@@ -84,7 +83,8 @@ async function findMatchingCategory(type, queryKeyword, FeedBack) {
   let result = {
     isMatched: minDistCategory && minDistCategory.distAvg <= 4,
     queryKeyword: queryKeyword,
-    minDistCategory: (minDistCategory) ? minDistCategory.category : null
+    minDistCategory: (minDistCategory) ? minDistCategory.category : null,
+    minDistance: (minDistCategory) ? minDistCategory.distAvg : null
   };
   return result;
 }
@@ -214,7 +214,7 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
     };
 
     // Distance 평균 구하기
-    console.log(`\n${c.keywords}에 대한 가중치 계산`)
+    console.log(`\n${c.representation} 카테고리 에 대한 가중치 계산`)
     let distAvg = getDistAvg(dS, keywordsLength, Weights);
     console.log(`distAvg = ${distAvg}`)
 
@@ -258,9 +258,9 @@ function getDistAvg(distanceSum, keywordsLength, Weights) {
     DistAvg = distanceSum / keywordsLength;
     // ----- 가중치 곱하기 -----
     for (let weight in Weights) {
-      console.log(`가중치 ${weight}(${Weights[weight]}) 곱하기`)
+      // console.log(`가중치 ${weight}(${Weights[weight]}) 곱하기`)
       DistAvg *= Weights[weight];
-      console.log(`DistAvg =  ${DistAvg}`)
+      // console.log(`DistAvg =  ${DistAvg}`)
     }
   }
   return DistAvg;

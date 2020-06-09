@@ -8,6 +8,7 @@ var mongoStore = require('connect-mongo');
 var classRouter = require('./routes/class');
 var authRouter = require('./routes/auth');
 var userRouter = require('./routes/user');
+var searchRouter = require('./routes/search')
 
 var app = new express();
 
@@ -47,6 +48,8 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use('/class', classRouter);
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
+app.use('/search', searchRouter);
+
 
 //테스팅
 //var test = require('./test');

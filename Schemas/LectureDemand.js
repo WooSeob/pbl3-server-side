@@ -3,7 +3,10 @@ var mongoose = require("mongoose");
 // 강의 수요 집계
 const LectureDemandSchema = new mongoose.Schema({
   date:String,
-  lecture: String,
+  lecture: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+  },
   count: Number,
 });
 

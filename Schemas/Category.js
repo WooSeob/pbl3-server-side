@@ -17,7 +17,7 @@ const CategorySchema = new mongoose.Schema({
   ],
   maxCnt: {
     type: Number,
-    default: 1
+    default: 0
   },
   subItems: [
     new mongoose.Schema({
@@ -29,6 +29,16 @@ const CategorySchema = new mongoose.Schema({
       ],
     }),
   ],
+});
+
+CategorySchema.pre('save', async function() {
+  //대표어 갱신
+  for(let keyword of this.keywords){
+    if(this.maxCnt <= keyword.count){
+      this.maxCnt = keyword.count
+      this.representation = keyword.key
+    }
+  }
 });
 
 CategorySchema.statics.getAllItems = async function () {
