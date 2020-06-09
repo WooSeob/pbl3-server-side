@@ -9,7 +9,7 @@ mongoose.connect("mongodb://localhost:27017/test", {
 
 const testData = [
   //DB에 데이터들이 모여있을때 아래 데이터들을 추가해서 어떻게 분류되는지 확인할
-  ""
+  "김기웅학우"
 ];
 
 const mDatas = [
@@ -100,7 +100,7 @@ const iDatas = [
 ];
 
 //데이터 셋 설정은 아래 DATA 를 수정할것
-var DATA = testData;
+var DATA = mDatas;
 var cnt = 0;
 
 const db = mongoose.connection;
@@ -114,7 +114,7 @@ db.once("open", async function () {
     // 비동기 호출 문제 때문에 setTimeout으로 호출하고있음
     for (let i = 0; i < DATA.length; i++) {
       console.log("타임아웃설정 " + DATA[i]);
-      setTimeout(search, 700 * i);
+      setTimeout(test1, 700 * i);
     }
     // searchOptimization()
     // console.log(await cm.Major.get())
