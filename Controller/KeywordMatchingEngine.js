@@ -20,7 +20,7 @@ async function addKeywordsToProperCategory(MatchingResult) {
       console.log(MatchingResult.minDistCategory); //추가
       MatchingResult.minDistCategory.keywords.push({ key: MatchingResult.queryKeyword }); //저장
       let result = await MatchingResult.minDistCategory.save();
-      console.log("완료 : " + result.keywords);
+      // console.log("완료 : " + result.keywords);
       return result;
     }
   } else {
@@ -35,7 +35,7 @@ async function addKeywordsToProperCategory(MatchingResult) {
   }
 }
 
-async function findMatchingCategory(type, queryKeyword, FeedBack) {
+async function findMatchingCategory(type, queryKeyword, FeedBacks) {
   let Categories = await Category.getItemsByType(type);
   // console.log(Categories)
 
@@ -76,7 +76,7 @@ async function findMatchingCategory(type, queryKeyword, FeedBack) {
   let minDistCategory = await getMinDistanceCategory(
     Categories,
     queryKeyword,
-    FeedBack
+    FeedBacks
   );
 
   let result = {
@@ -105,7 +105,7 @@ async function NoiseFilter(category) {
           keyword: keywords[j].key,
           index: j,
         },
-        distance: calcDistance(keywords[i].key, keywords[j].key),
+        distance: calcDistance(keywords[i], keywords[j]),
       };
       wordGraph.push(newEdge);
     }
@@ -113,7 +113,7 @@ async function NoiseFilter(category) {
   wordGraph.sort((a, b) => {
     return a.distance > b.distance ? 1 : -1;
   });
-  console.log(wordGraph);
+  // console.log(wordGraph);
 
   //3분위수
   let Q3 =
@@ -148,14 +148,13 @@ async function NoiseFilter(category) {
     //TODO vertex2로 지정해도 되는건지?
     let noiseKeyword = wordGraph[noiseIndex].vertex2.keyword;
 
-    keywords.splice(searchKeyword(keywords, noiseKeyword), 1);
-    console.log("제거결과 : " + keywords);
-    category.keywords = keywords;
-    let result = await category.save();
+    category.keywords.splice(searchKeyword(category.keywords, noiseKeyword), 1)
+    console.log("제거결과 : " + category.keywords);
+    console.log(category)
 
     let noiseInfo = {
       keyword: noiseKeyword,
-      category: result,
+      category: await category.save(),
     };
     return noiseInfo;
   } else {
@@ -164,7 +163,7 @@ async function NoiseFilter(category) {
   }
 }
 
-async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
+async function getMinDistanceCategory(Categories, queryKeyword, FeedBacks) {
   // @Params
   // type - Category.type
   // Categories - Categories Collection 내 모든 Document
@@ -173,7 +172,6 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
 
   let similar = new Array();
   
-
   for (let c of Categories) {
     // @c DB내 여러 카테고리들중 하나
     let distances = new Array()
@@ -182,7 +180,7 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
 
     //하나의 카테고리에 대해
     for (let keyword of c.keywords) {
-      console.log(c.keywords)
+      // console.log(c.keywords)
       //keyword - queryKeyword 가 서로 줄임말일 경우 가중치 up
       if (exCompare(keyword.key, queryKeyword)) {
         exCnt++;
@@ -199,7 +197,7 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
         distance: levenshtein.get(
           uniqueWordSeperator(keyword.key),
           uniqueWordSeperator(queryKeyword)
-        ), //* lengthWeight,
+        ) * lengthWeight,
         count: keyword.count
       })
       cntSum += keyword.count
@@ -225,20 +223,21 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
 
   
     // 피드백에 의한 Distance평균에 가중치 처리 해주기
-    if(FeedBack && String(c._id) === String(FeedBack.target._id)){
-      for (let weight in FeedBack.Weights) {
-        //1. 기존 카테고리에서 노이즈 필터링으로 제거되서 넘어온 경우
-        //   - 기존에 있던 카테고리에 다시 배치될 가능성을 낮추기 위해 Distance를 2배 해준다.
-        //2. 검색 결과에 대한 피드백으로서 받은 가중치를 적용해 준다.
-        //   - 검색결과가 정확할 때 : Weight > 1 Distance를 크게 만들어 원래 카테고리에 배치될 가능성을 낮춤
-        //   - 검색결과가 부정확할 때 : Weight < 1
-        distAvg *= FeedBack.Weights[weight];
-        console.log(
-            `피드백에 의해 키워드(${queryKeyword})에 대한 카테고리 ${c}의 DistanceAvg를 ${FeedBack.Weights[weight]}배(${distAvg}) 합니다.`
-        );
+    for(let FeedBack of FeedBacks){
+      if(FeedBack && String(c._id) === String(FeedBack.target._id)){
+        for (let weight in FeedBack.Weights) {
+          //1. 기존 카테고리에서 노이즈 필터링으로 제거되서 넘어온 경우
+          //   - 기존에 있던 카테고리에 다시 배치될 가능성을 낮추기 위해 Distance를 2배 해준다.
+          //2. 검색 결과에 대한 피드백으로서 받은 가중치를 적용해 준다.
+          //   - 검색결과가 정확할 때 : Weight > 1 Distance를 크게 만들어 원래 카테고리에 배치될 가능성을 낮춤
+          //   - 검색결과가 부정확할 때 : Weight < 1
+          distAvg *= FeedBack.Weights[weight];
+          console.log(
+              `피드백에 의해 키워드(${queryKeyword})에 대한 카테고리 ${c}의 DistanceAvg를 ${FeedBack.Weights[weight]}배(${distAvg}) 합니다.`
+          );
+        }
       }
     }
-    
 
     // Distance를 포함한 정보를 리스트에 추가
     similar.push({
@@ -257,20 +256,20 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
 }
 
 function getDistAvg(Distances, CountSum, Weights) {
-  console.log(Distances)
+  // console.log(Distances)
   // keyword : keywords (1:다) 하나의 키워드와 카테고리 키워드들에 대한 Distance 평균
   let DistAvg = 0
 
   for(let d of Distances){
     let weightPercentage = (d.count / CountSum)
-    console.log(`${d.distance} * ${weightPercentage}`)
+    // console.log(`${d.distance} * ${weightPercentage}`)
     DistAvg += d.distance * weightPercentage
   }
-  console.log(`DistAvg =  ${DistAvg}`)
+  // console.log(`DistAvg =  ${DistAvg}`)
 
   // ----- 가중치 곱하기 -----
   for (let weight in Weights) {
-    console.log(`가중치 ${weight}(${Weights[weight]}) 곱하기`)
+    // console.log(`가중치 ${weight}(${Weights[weight]}) 곱하기`)
     DistAvg *= Weights[weight];
     // console.log(`DistAvg =  ${DistAvg}`)
   }
@@ -320,24 +319,33 @@ function exCompare(s1, s2) {
   return true;
 }
 
-function calcDistance(s1, s2) {
+function calcDistance(k1, k2) {
   //console.log("\n "+ s1 + " - " + s2)
-  let exWeigh = exCompare(s1, s2) ? 0.01 : 1; //줄임말 관계가 맞으면 distance를 매우 작게 만들어준다
+  let s1 = k1.key
+  let s2 = k2.key
 
+  //피드백 가중치
+  //Keyword1과 Keyword2 사이 피드백값중 작은 값을 택한다.
+  //값이 음수일때 그 키워드는 해당 카테고리에 부적합하다고 피드백 받은것이기 때문에
+  //절대값에 비례하게 Distance값을 높여서 해당 카테고리에서 벗어날 가능성을 높인다
+  let Fmin = Math.min(k1.feedback, k2.feedback)
+  let FeedbackWeight = Math.pow(2.7, Fmin)
+
+  //줄임말 관계가 맞으면 distance를 매우 작게 만들어준다
+  let exWeigh = exCompare(s1, s2) ? 0.01 : 1;
+
+  //3자리 이하면 줄임말일 가능성이 높다
   let seperatedS1 = uniqueWordSeperator(s1);
   let seperatedS2 = uniqueWordSeperator(s2);
-
   let keyLengthAvg = (seperatedS1.length + seperatedS2.length) / 2;
-
   let lengthWeight = keyLengthAvg <= 4 ? Math.pow(2.7, 4 - keyLengthAvg) : 1;
 
   let result =
     levenshtein.get(seperatedS1, seperatedS2) *
-    lengthWeight * //3자리 이하면 줄임말일 가능성이 높다
-    exWeigh;
-
-  //console.log ("d : " + result)
-
+    lengthWeight * 
+    exWeigh *
+    FeedbackWeight;
+    
   return result;
 }
 

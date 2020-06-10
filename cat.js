@@ -114,7 +114,7 @@ db.once("open", async function () {
     // 비동기 호출 문제 때문에 setTimeout으로 호출하고있음
     for (let i = 0; i < DATA.length; i++) {
       console.log("타임아웃설정 " + DATA[i]);
-      setTimeout(test1, 700 * i);
+      setTimeout(test1, 1000 * i);
     }
     // searchOptimization()
     // console.log(await cm.Major.get())
