@@ -794,12 +794,12 @@ classRouter.post("/search", function (req, res) {
       // res.send(searchingArr);
 
       // 수요집계 DB 모두 조회
-      LectureDemand.find({}, "lecture count", (err, demand) => {
+      LectureDemand.find({}, "lecture count date", (err, demand) => {
         if (err) {
           res.send("fail");
           console.log(err);
         }
-
+        
         // DB가 비어있을 경우저장 (비어있으면 에러남)
         if (demand.length == 0) {
           var lectureSearch = new LectureDemand({
@@ -821,8 +821,8 @@ classRouter.post("/search", function (req, res) {
           // 수요집계 DB에 있는 모든 lecture에 대해 키워드 갖고있는지 확인
           demand.forEach(function (element) {
             if (
-              element.lecture.indexOf(userSearch) != -1 ||
-              userSearch.includes(element.lecture) == 1 &&
+              (element.lecture.indexOf(userSearch) != -1 ||
+              userSearch.includes(element.lecture) == 1) &&
               element.date == today.toLocaleDateString()
             ) {
               element.count++;
