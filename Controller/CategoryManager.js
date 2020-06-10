@@ -36,7 +36,8 @@ async function addCategory(type, queryKeyword) {
   
   let AddResult;
   //키워드 매칭 & 추가
-  AddResult = await KeywordMatchingEngine.addKeywordsToProperCategory(type, queryKeyword, null);
+  let Matching = await KeywordMatchingEngine.findMatchingCategory(type, queryKeyword, null)
+  AddResult = await KeywordMatchingEngine.addKeywordsToProperCategory(Matching);
 
   //카테고리 최적화
   let Categories = await Category.getItemsByType(type);
@@ -51,7 +52,8 @@ async function addCategory(type, queryKeyword) {
           target: noiseInfo.category,
           Weights: { noiseFilter: 2.0 }
         }
-        AddResult = await KeywordMatchingEngine.addKeywordsToProperCategory(type, noiseInfo.keyword, feedback)
+        Matching = await KeywordMatchingEngine.findMatchingCategory(type, noiseInfo.keyword, feedback)
+        AddResult = await KeywordMatchingEngine.addKeywordsToProperCategory(Matching)
       }
     }
   }
@@ -60,7 +62,6 @@ async function addCategory(type, queryKeyword) {
 
 //TODO 모든 type대응
 async function Search(type, queryKeyword) {
-  let Categories = await Category.getItemsByType(type);
   //키워드 매칭 결과 반환
   return await KeywordMatchingEngine.findMatchingCategory(
     type,
@@ -77,6 +78,7 @@ async function searchOptimization(type, isMatched, queriedKeyword, recommeded) {
   let feedback = null;
   recommeded.category = await Category.findById(recommeded.categoryID, (err, cat)=>{})
 
+  //
   if (isMatched) {
     //매칭 성공했던 키워드-카테고리 검색건에 대해서
     if(recommeded.accurate){

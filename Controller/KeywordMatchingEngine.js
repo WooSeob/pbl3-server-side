@@ -2,8 +2,7 @@ const mongoose = require("mongoose");
 const Category = mongoose.model("Category", require("../Schemas/Category"));
 const levenshtein = require("fast-levenshtein");
 
-async function addKeywordsToProperCategory(type, queryKeyword, FeedBack) {
-  let  MatchingResult = await findMatchingCategory(type, queryKeyword, FeedBack);
+async function addKeywordsToProperCategory(MatchingResult) {
 
   if (MatchingResult.isMatched) {
     //삽입할 카테고리를 찾은경우
@@ -19,7 +18,7 @@ async function addKeywordsToProperCategory(type, queryKeyword, FeedBack) {
     if (!MatchingResult.isProcessed) {
       //할일이 남아있는경우 (기존 키워드와 일치해서 카운트 올리고 끝난경우 말고)
       console.log(MatchingResult.minDistCategory); //추가
-      MatchingResult.minDistCategory.keywords.push({ key: queryKeyword }); //저장
+      MatchingResult.minDistCategory.keywords.push({ key: MatchingResult.queryKeyword }); //저장
       let result = await MatchingResult.minDistCategory.save();
       console.log("완료 : " + result.keywords);
       return result;
@@ -28,8 +27,8 @@ async function addKeywordsToProperCategory(type, queryKeyword, FeedBack) {
     //삽입할 카테고리를 찾지 못했거나, 기존 데이터가 하나도 없는경우
     console.log("적절하게 삽입할 곳이 없습니다.");
 
-    var newEntity = await Category.create({ type: type }); //카테고리 새로만들기
-    newEntity.keywords.push({ key: queryKeyword }); // 새로만든 카테고리에 키워드 추가
+    var newEntity = await Category.create({ type: "MAJOR" }); //카테고리 새로만들기
+    newEntity.keywords.push({ key: MatchingResult.queryKeyword }); // 새로만든 카테고리에 키워드 추가
     let result = await newEntity.save(); //저장
     console.log("새로 생성 : " + result);
     return result;
@@ -173,14 +172,17 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
   // isNoise - 노이즈로 제거된 키워드 새롭게 추가할때 보내는 부가정보 (다시 기존그룹으로 들어가지 않게끔)
 
   let similar = new Array();
+  
 
   for (let c of Categories) {
     // @c DB내 여러 카테고리들중 하나
-    let dS = 0;
+    let distances = new Array()
+    let cntSum = 0;
     let exCnt = 0;
 
     //하나의 카테고리에 대해
     for (let keyword of c.keywords) {
+      console.log(c.keywords)
       //keyword - queryKeyword 가 서로 줄임말일 경우 가중치 up
       if (exCompare(keyword.key, queryKeyword)) {
         exCnt++;
@@ -193,11 +195,14 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
       let lengthWeight =
         keyLengthAvg <= 4 ? Math.pow(2.7, 4 - keyLengthAvg) : 1;
       //Distance 합산
-      dS +=
-        levenshtein.get(
+      distances.push({
+        distance: levenshtein.get(
           uniqueWordSeperator(keyword.key),
           uniqueWordSeperator(queryKeyword)
-        ) * lengthWeight;
+        ), //* lengthWeight,
+        count: keyword.count
+      })
+      cntSum += keyword.count
     }
 
     let keywordsLength = c.keywords.length; //대상 카테고리 키워드 리스트 길이
@@ -205,7 +210,7 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
     // 가중치 계산
     let Weights = {
       //대상 카테고리 키워드 리스트 길이 가중치 - 한 카테고리를 지칭하는 단어가 많을 가능성이 적다
-      keywordsLength: Math.pow(1.2, keywordsLength - 2),
+      // keywordsLength: Math.pow(1.2, keywordsLength - 2),
       //전체 카테고리 수 가중치 - 전체 카테고리들의 수가 적을수록 dS커지게
       categoryLength:
         Categories.length <= 10 ? Math.pow(1.1, 10 - Categories.length) : 1,
@@ -215,7 +220,7 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
 
     // Distance 평균 구하기
     console.log(`\n${c.representation} 카테고리 에 대한 가중치 계산`)
-    let distAvg = getDistAvg(dS, keywordsLength, Weights);
+    let distAvg = getDistAvg(distances, cntSum, Weights);
     console.log(`distAvg = ${distAvg}`)
 
   
@@ -251,17 +256,23 @@ async function getMinDistanceCategory(Categories, queryKeyword, FeedBack) {
   return similar.pop();
 }
 
-function getDistAvg(distanceSum, keywordsLength, Weights) {
+function getDistAvg(Distances, CountSum, Weights) {
+  console.log(Distances)
   // keyword : keywords (1:다) 하나의 키워드와 카테고리 키워드들에 대한 Distance 평균
-  let DistAvg = 0;
-  if (distanceSum != 0) {
-    DistAvg = distanceSum / keywordsLength;
-    // ----- 가중치 곱하기 -----
-    for (let weight in Weights) {
-      // console.log(`가중치 ${weight}(${Weights[weight]}) 곱하기`)
-      DistAvg *= Weights[weight];
-      // console.log(`DistAvg =  ${DistAvg}`)
-    }
+  let DistAvg = 0
+
+  for(let d of Distances){
+    let weightPercentage = (d.count / CountSum)
+    console.log(`${d.distance} * ${weightPercentage}`)
+    DistAvg += d.distance * weightPercentage
+  }
+  console.log(`DistAvg =  ${DistAvg}`)
+
+  // ----- 가중치 곱하기 -----
+  for (let weight in Weights) {
+    console.log(`가중치 ${weight}(${Weights[weight]}) 곱하기`)
+    DistAvg *= Weights[weight];
+    // console.log(`DistAvg =  ${DistAvg}`)
   }
   return DistAvg;
 }
