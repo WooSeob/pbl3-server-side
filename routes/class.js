@@ -22,6 +22,7 @@ const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
 const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
+const CM = require("../Controller/CategoryManager");
 
 var classRouter = express.Router();
 classRouter.use(express.json());
@@ -182,13 +183,15 @@ classRouter.get("/:id", function (req, res) {
     }
 
     //튜터 닉네임 추가해서 응답
-    User.findById(Class.tutor, (err, user) => {
+    User.findById(Class.tutor, async (err, user) => {
       if (err) {
         console.log(err);
         return res.send("fail");
       }
 
       let rData = Class.toObject();
+      //카테고리ID -> 대표어로 변환후 전송
+      rData.category = await CM.getReprFromID(rData.category)
       rData.tutorNickName = user.nickname;
       res.send(rData);
     });

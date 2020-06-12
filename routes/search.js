@@ -15,7 +15,7 @@ searchRouter.get("/:query", async (req, res) => {
   let bufferFeedbacks = await CM.getBufferFeedbacks(req.params.query)
   let MatchingResult = await CM.Search(req.params.query, bufferFeedbacks);
   //모든 수업 불러오기
-  let allClasses = await Class.find({}, "className tutor");
+  let allClasses = await Class.find({}, "className tutor category");
   //let AddResult = await CM.Major.addCategory(req.params.query)
 
   // console.log("매칭 여부 : " + MatchingResult.isMatched);
@@ -42,6 +42,15 @@ searchRouter.get("/:query", async (req, res) => {
       representation: MatchingResult.minDistCategory.representation,
     };
     await KME.addKeywordsToProperCategory(MatchingResult);
+
+
+    //카테고리 검색
+    allClasses.forEach(e => {
+      if(String(e.category) == String(MatchingResult.minDistCategory._id)){
+        searchingArr.push(e)
+      }
+    })
+
   } else {
     //매치 안됐을때
 
@@ -66,11 +75,15 @@ searchRouter.get("/:query", async (req, res) => {
 
   if (searchingArr.length == 0) {
     //검색결과 없음
-    LectureDemandManager.Count(MatchingResult.minDistCategory);
+    // LectureDemandManager.Count(MatchingResult.minDistCategory);
   }
 
   res.send(SearchResult);
 });
+
+searchRouter.get("/list/category", async (req, res)=>{
+  res.send(await CM.Major.get())
+})
 
 searchRouter.post("/feedback", async (req, res) => {
   //검색 품질 피드백

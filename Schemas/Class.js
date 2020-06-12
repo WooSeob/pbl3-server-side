@@ -41,8 +41,8 @@ const ClassSchema = new mongoose.Schema({
 
   //카테고리 ex)컴퓨터공학
   category: {
-    type: String,
-    enum: ["컴퓨터공학", "수학", "영어"],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category"
   },
 
   //수업 ex)알고리즘
