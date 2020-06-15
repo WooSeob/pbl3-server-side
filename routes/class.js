@@ -368,6 +368,35 @@ classRouter.get("/:id/start", (req, res) => {
   });
 });
 
+//종강 처리
+//TODO 나중에 수정할것
+classRouter.get("/:id/end", (req, res) => {
+  let userID = req.session.uid;
+  let targetClassID = req.params.id;
+
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
+
+    Class.findById(targetClassID, (err, Class) => {
+      if (err) {
+        console.log(err);
+        return res.send("fail");
+      }
+
+      ClassStateManager.endLecture(Class, (err) => {
+        if (err) {
+          console.log(err);
+          return res.send("fail");
+        }
+        res.send("success");
+      });
+    });
+  });
+});
+
 //------------------------------------    QnA    ------------------------------------
 //QnA 질문 게시글 조회
 classRouter.get("/:id/question", (req, res) => {
@@ -766,112 +795,4 @@ classRouter.get("/:id/join", function (req, res) {
 
 // -------------------------- 강의검색 & 수요 집계 --------------------------
 
-classRouter.post("/search", function (req, res) {
-  // 검색 키워드
-  var userSearch = req.body.search;
-  // 검색 결과를 저장할 배열
-  var searchingArr = [];
-  // 중복 여부를 위한 변수
-  var alreadyInDB = false;
-  var sortedArr;
-  var today = new Date();
-  
-  
-  // 모든 Class 조회
-  Class.find({}, "className tutor", (err, found) => {
-    if (err) {
-      res.send("fail");
-    }
-    // 찾은 모든 Class에 대해 키워드를 갖고있는 지 확인
-    found.forEach(function (element) {
-      if (element.className.indexOf(userSearch) != -1) {
-        searchingArr.push(element);
-      }
-    });
-
-    // 검색 결과 존재
-    if (searchingArr.length > 0) {
-      res.send(searchingArr);
-      
-    } else if (searchingArr.length == 0) {
-      //검색결과 존재 안함
-      // res.send(searchingArr);
-
-      // 수요집계 DB 모두 조회
-      LectureDemand.find({}, "lecture count", (err, demand) => {
-        if (err) {
-          res.send("fail");
-          console.log(err);
-        }
-
-        // DB가 비어있을 경우저장 (비어있으면 에러남)
-        if (demand.length == 0) {
-          var lectureSearch = new LectureDemand({
-            lecture: userSearch,
-            count: 1,
-            date: today.toLocaleDateString()
-          });
-
-          lectureSearch.save(function (err) {
-            if (err) {
-              res.send("fail");
-              return err;
-            }
-          });
-          res.send(searchingArr);
-          console.log("강의명 : " + userSearch + " - 수요 집계 DB에 저장됨");
-          alreadyInDB = true;
-        } else {
-          // 수요집계 DB에 있는 모든 lecture에 대해 키워드 갖고있는지 확인
-          demand.forEach(function (element) {
-            if (
-              element.lecture.indexOf(userSearch) != -1 ||
-              userSearch.includes(element.lecture) == 1 &&
-              element.date == today.toLocaleDateString()
-            ) {
-              element.count++;
-              console.log("날짜 : " +today.toLocaleDateString()+ " 강의명 : " + userSearch + " - 수요 1 증가");
-              element.save();
-              alreadyInDB = true;
-              res.send(searchingArr);
-            }
-          });
-        }
-
-        // 위에서 아무작업도 거치지 않았을 경우
-        if (alreadyInDB == false) {
-          var lectureSearch = new LectureDemand({
-            lecture: userSearch,
-            count: 1,
-            date: today.toLocaleDateString()
-          });
-
-          lectureSearch.save(function (err) {
-            if (err) {
-              res.send("fail");
-              return err;
-            }
-            console.log("강의명 : " + userSearch + " - 수요 집계 DB에 저장됨");
-            res.send(searchingArr);
-          });
-        }
-      });
-      // 정렬
-      setTimeout(sort, 1700);
-    }
-  });
-  
-  // 정렬 함수
-  function sort() {
-    LectureDemand.sorting((err, sort) => {
-      if (err) {
-        console.log(err);
-      }
-      sortedArr = sort;
-      console.log(sortedArr);
-    });
-  }
-
-
-});
 module.exports = classRouter;
