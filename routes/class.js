@@ -78,10 +78,10 @@ classRouter.post("/", function (req, res) {
     //강의시간 데이터 있으면 추가
     if (req.body.lectureTimes) {
       let Times = new Array();
-      for(let lectureTime of req.body.lectureTimes){
-        Times.push(new LectureTime(lectureTime))
+      for (let lectureTime of req.body.lectureTimes) {
+        Times.push(new LectureTime(lectureTime));
       }
-      
+
       await newClass.addClassData("LectureTime", Times, (errmsg) => {
         if (errmsg) {
           return console.log(errmsg);
@@ -772,8 +772,7 @@ classRouter.post("/search", function (req, res) {
   var alreadyInDB = false;
   var sortedArr;
   var today = new Date();
-  
-  
+
   // 모든 Class 조회
   Class.find({}, "className tutor", (err, found) => {
     if (err) {
@@ -789,7 +788,6 @@ classRouter.post("/search", function (req, res) {
     // 검색 결과 존재
     if (searchingArr.length > 0) {
       res.send(searchingArr);
-      
     } else if (searchingArr.length == 0) {
       //검색결과 존재 안함
       // res.send(searchingArr);
@@ -800,13 +798,13 @@ classRouter.post("/search", function (req, res) {
           res.send("fail");
           console.log(err);
         }
-        
+
         // DB가 비어있을 경우저장 (비어있으면 에러남)
         if (demand.length == 0) {
           var lectureSearch = new LectureDemand({
             lecture: userSearch,
             count: 1,
-            date: today.toLocaleDateString()
+            date: today.toLocaleDateString(),
           });
 
           lectureSearch.save(function (err) {
@@ -823,11 +821,17 @@ classRouter.post("/search", function (req, res) {
           demand.forEach(function (element) {
             if (
               (element.lecture.indexOf(userSearch) != -1 ||
-              userSearch.includes(element.lecture) == 1) &&
+                userSearch.includes(element.lecture) == 1) &&
               element.date == today.toLocaleDateString()
             ) {
               element.count++;
-              console.log("날짜 : " +today.toLocaleDateString()+ " 강의명 : " + userSearch + " - 수요 1 증가");
+              console.log(
+                "날짜 : " +
+                  today.toLocaleDateString() +
+                  " 강의명 : " +
+                  userSearch +
+                  " - 수요 1 증가"
+              );
               element.save();
               alreadyInDB = true;
               res.send(searchingArr);
@@ -840,7 +844,7 @@ classRouter.post("/search", function (req, res) {
           var lectureSearch = new LectureDemand({
             lecture: userSearch,
             count: 1,
-            date: today.toLocaleDateString()
+            date: today.toLocaleDateString(),
           });
 
           lectureSearch.save(function (err) {
@@ -857,7 +861,7 @@ classRouter.post("/search", function (req, res) {
       setTimeout(sort, 1700);
     }
   });
-  
+
   // 정렬 함수
   function sort() {
     LectureDemand.sorting((err, sort) => {
@@ -868,7 +872,5 @@ classRouter.post("/search", function (req, res) {
       console.log(sortedArr);
     });
   }
-
-
 });
 module.exports = classRouter;
