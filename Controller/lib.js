@@ -38,7 +38,7 @@ class WordGraph {
       this.DistanceSum += edge.distance;
     }
 
-    this.Threshold = this.DistanceSum / this.edges.length - 1;
+    this.Threshold = (this.DistanceSum != 0) ? (this.DistanceSum / this.edges.length - 1) : (1);
 
     this.noiseIndex = this.edges.length - this.keywords.length + 1;
 

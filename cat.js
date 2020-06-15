@@ -1,6 +1,9 @@
 var mongoose = require("mongoose");
 const levenshtein = require("fast-levenshtein");
 const cm = require("./Controller/CategoryManager");
+const FS = require('fs');
+
+
 // DB 연결
 mongoose.connect("mongodb://localhost:27017/test", {
   useNewUrlParser: true,
@@ -29,36 +32,36 @@ const mDatas = [
   "기계공학과",
   "기계",
 
-  // "화학공학과",
-  // "화학",
+  "화학공학과",
+  "화학",
 
-  // "토목안전환경공학과",
-  // "토안환",
+  "토목안전환경공학과",
+  "토안환",
 
-  // "디자인학과",
-  // "디자인",
+  "디자인학과",
+  "디자인",
 
-  // "식물생명공학과",
-  // "식물생명",
-  // "식물",
+  "식물생명공학과",
+  "식물생명",
+  "식물",
 
-  // "동물생명공학과",
-  // "동물",
+  "동물생명공학과",
+  "동물",
 
-  // "경영학과",
-  // "경영",
+  "경영학과",
+  "경영",
 
-  // "법학과",
-  // "법학",
+  "법학과",
+  "법학",
 
-  // "행정학과",
-  // "행정학",
+  "행정학과",
+  "행정학",
 
   // 검증1 - 관련 데이터 기존에 있는경우 -> 기존카테고리로 투입
-  // "동물생명",
-  // "식생공",
-  // "토목안전환경",
-  // "화공",
+  "동물생명",
+  "식생공",
+  "토목안전환경",
+  "화공",
   "기계공",
   "컴퓨타",
   "전기전자",
@@ -100,7 +103,6 @@ const iDatas = [
 ];
 
 //데이터 셋 설정은 아래 DATA 를 수정할것
-var DATA = mDatas;
 var cnt = 0;
 
 const db = mongoose.connection;
@@ -110,12 +112,21 @@ db.once("open", async function () {
 
   const Category = mongoose.model("Category", require("./Schemas/Category"));
   Category.init()
-  .then(async ()=>{
+  .then(()=>{
     // 비동기 호출 문제 때문에 setTimeout으로 호출하고있음
-    for (let i = 0; i < DATA.length; i++) {
-      console.log("타임아웃설정 " + DATA[i]);
-      setTimeout(test1, 1000 * i);
-    }
+
+    FS.readFile('categoryData.json', 'utf8', async function(err, data){
+      let Data = JSON.parse(data).datas
+      console.log(Data)
+      for (let i = 0; i < Data.length; i++){
+        let result = await cm.Major.addCategory(Data[i])
+      }
+    });
+    
+    // for (let i = 0; i < DATA.length; i++) {
+    //   console.log("타임아웃설정 " + DATA[i]);
+    //   setTimeout(test1, 1000 * i);
+    // }
     // searchOptimization()
     // console.log(await cm.Major.get())
   })  
