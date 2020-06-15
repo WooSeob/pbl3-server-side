@@ -251,7 +251,11 @@ async function resetDB() {
 
             db.dropCollection("categories", async function (err, result) {
               await console.log("카테고리 삭제");
-              console.log("모두 삭제됐습니다.");
+
+              db.dropCollection("lecturedemands", async function (err, result) {
+                await console.log("강의 수요정보 삭제");
+                console.log("모두 삭제됐습니다.");
+              });
             });
           });
         });

@@ -31,12 +31,13 @@ searchRouter.get("/:query", async (req, res) => {
   };
 
   //검색대상 설정
-  let targetKeywords;
+  let targetKeywords = new Array();
+  targetKeywords.push({ key: req.params.query });
 
   if (MatchingResult.isMatched) {
     //매치 됐을때
 
-    targetKeywords = MatchingResult.minDistCategory.keywords;
+    targetKeywords.concat(MatchingResult.minDistCategory.keywords)
     SearchResult.matched = {
       categoryID: MatchingResult.minDistCategory._id,
       representation: MatchingResult.minDistCategory.representation,
@@ -55,9 +56,7 @@ searchRouter.get("/:query", async (req, res) => {
     //매치 안됐을때
 
     await CM.addToBuffer(req.params.query, MatchingResult.minDistCategory);
-    console.log("addtobuffer끗")
-
-    targetKeywords = [{ key: req.params.query }];
+    
     SearchResult.recommend = {
       categoryID: MatchingResult.minDistCategory._id,
       representation: MatchingResult.minDistCategory.representation,
@@ -75,7 +74,7 @@ searchRouter.get("/:query", async (req, res) => {
 
   if (searchingArr.length == 0) {
     //검색결과 없음
-    // LectureDemandManager.Count(MatchingResult.minDistCategory);
+    LectureDemandManager.Count(MatchingResult.minDistCategory);
   }
 
   res.send(SearchResult);
