@@ -251,6 +251,7 @@ function sendMail(email) {
   return randomNumber;
 }
 
+/* 성적인증 
 // 미들 웨어
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -280,5 +281,6 @@ router.post("/upload", upload.single("gradeAuth"), function (req, res) {
     }
   });
 });
+*/
 
 module.exports = router;
