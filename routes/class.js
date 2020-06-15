@@ -173,6 +173,7 @@ classRouter.get("/name/:name", function (req, res) {
     });
 });
 
+
 //수업id로 정보 받아오기
 classRouter.get("/:id", function (req, res) {
   let targetClassID = req.params.id;
@@ -197,6 +198,31 @@ classRouter.get("/:id", function (req, res) {
     });
   });
 });
+
+classRouter.get("/:id/tutees", (req, res) => {
+  let targetClassID = req.params.id;
+  let userID = req.session.uid;
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
+    Class.findById(targetClassID, async (err, Class) => {
+      let TuteeList = new Array()
+
+      for (let tuteeID of Class.tutees) {
+        let tutee = await User.findById(tuteeID)
+        TuteeList.push({
+          nickname: tutee.nickname,
+          uID: tutee._id
+        })
+      }
+      console.log(TuteeList)
+      res.send(TuteeList)
+    })
+  })
+})
+
 //------------------------------------    정보추가    ------------------------------------
 //강의 기본정보 (성적인증이미지url, 소개글) 추가
 classRouter.post("/:id/basic-info", (req, res) => {
