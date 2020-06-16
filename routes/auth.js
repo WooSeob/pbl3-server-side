@@ -10,6 +10,7 @@ var GradeSchema = require("../Schemas/GradeInfo");
 const Grade = mongoose.model("grade", GradeSchema);
 mongoose.set("useFindAndModify", false);
 const multer = require("multer");
+const hknuAddress = "@hknu.ac.kr"
 
 router.use(express.json());
 
