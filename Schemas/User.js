@@ -6,8 +6,8 @@ const UserSchema = new mongoose.Schema({
   nickname: String,
 
   major: {
-    type: String,
-    enum: ["컴퓨터공학", "경영", "화학"],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category"
   },
 
   point: Number,

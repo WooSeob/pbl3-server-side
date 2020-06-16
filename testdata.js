@@ -19,6 +19,9 @@ const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
 const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 
+const CM = require("./Controller/CategoryManager");
+const FS = require('fs');
+
 //입력 관리
 const readline = require("readline");
 const rl = readline.createInterface({
@@ -142,33 +145,6 @@ async function mainlogic() {
       continue;
     } else if (type === "7") {
       process.exit();
-    } else if (type === "8") {
-      //카테고리 생성
-      // makeCategory("MAJOR", "컴퓨터", ["컴퓨터구조", "알고리즘", "자료구조"])
-      // makeCategory("MAJOR", "전기전자제어공학", ["전전제 과목1", "전전제 과목2"])
-      // makeCategory("MAJOR", "기계공학과", ["기공 과목1", "기공 과목2"])
-      // makeCategory("MAJOR", "화학공학과", ["화공 과목1", "화공 과목2"])
-
-    }else if (type === "9") {
-      //카테고리 생성
-      // makeCategory("INTERESTS", "스포츠", ["축구", "농구", "야구"])
-      // makeCategory("INTERESTS", "원예", ["꽃꽃이", "플라워 공예"])
-
-    }else if (type === "10") {
-      //CategoryManager 테스트
-      let cm = require("./Controller/CategoryManager")
-
-      // console.log(await cm.Major.get());
-      // console.log(await cm.Interests.get());
-      // console.log(await cm.Major.getSubItems("컴퓨터공학"))
-      // console.log(await cm.Interests.getSubItems("스포츠"))
-      cm.Major.addCategory("기계공학")
-      //cm.Major.addCategory("전기전자제어공학")
-
-      // cm.test.exCompare("한경한경컴퓨터공학과", "컴공")
-      // cm.test.exCompare("전기전자제어공학과", "전전제")
-      // cm.test.exCompare("전기전자제어공학과", "전정제")
-
     } else {
       if (!newUser) {
         newUser = await makeUser(1);
@@ -181,7 +157,6 @@ async function mainlogic() {
 
       let data = {
         classType: selectedType,
-        category: "컴퓨터공학",
         studyAbout: "수업 과목",
         className: "테스트" + classCount++,
         price: 10,
@@ -213,6 +188,20 @@ db.once("open", function () {
 
 mainlogic();
 
+async function setCategory(){
+  FS.readFile('categoryData.json', 'utf8', async function(err, data){
+    let Data = JSON.parse(data).datas
+    console.log(Data)
+    for (let i = 0; i < Data.length; i++){
+      let result = await CM.Major.addCategory(Data[i])
+    }
+  });
+  let categoryList = await CM.Major.get()
+  console.log("카테고리 생성을 완료 했습니다.")
+  console.log("생성된 카테고리 : ")
+  console.log(categoryList)
+}
+
 async function makeCategory(type, name, subItems){
   // let newCategory = await Category.create({
   //   type: type,
@@ -222,12 +211,21 @@ async function makeCategory(type, name, subItems){
   // return newCategory
 }
 
+function randomNum(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 async function makeUser(num) {
+  let categoryList = await CM.Major.get()
+  if(categoryList.length == 0){
+    setCategory()
+  }
+
   newUser = await User.create({
     id: "test" + num,
     password: "asdf",
     nickname: "테스트유저" + num,
-    major: "컴퓨터공학",
+    major: categoryList[randomNum(0, categoryList.length)].cID,
     point: 10000000,
     classesAsTutee: [],
     classesAsTutor: [],
@@ -253,7 +251,11 @@ async function resetDB() {
 
             db.dropCollection("categories", async function (err, result) {
               await console.log("카테고리 삭제");
-              console.log("모두 삭제됐습니다.");
+
+              db.dropCollection("lecturedemands", async function (err, result) {
+                await console.log("강의 수요정보 삭제");
+                console.log("모두 삭제됐습니다.");
+              });
             });
           });
         });
@@ -263,6 +265,12 @@ async function resetDB() {
 }
 
 async function makeClass(data, userID) {
+
+  let categoryList = await CM.Major.get()
+  if(categoryList.length == 0){
+    setCategory()
+  }
+
   //기본적으로 강의개설직후는 '준비중' 상태
   await User.findOne({ id: userID }, async (err, tutor) => {
     if (err) {
@@ -277,7 +285,7 @@ async function makeClass(data, userID) {
     //기본적으로 강의개설직후는 '준비중' 상태
     var newClass = new Class({
       classType: data.classType,
-      category: data.category,
+      category: categoryList[randomNum(0, categoryList.length)].cID,
       studyAbout: data.studyAbout,
       className: data.className,
       price: data.price,

@@ -3,6 +3,7 @@ var User = require("../Schemas/User");
 var Class = require("../Schemas/Class");
 var userRouter = express.Router();
 var Mail = require("../Schemas/MailAuth");
+const LectureDemandManager = require("../Controller/LectureDemandManager");
 
 /*
     회원가입 /register -> /
@@ -101,7 +102,25 @@ userRouter.get("/:id", function (req, res) {
   });
 });
 
-//내가 튜터인 클래스들 받아오기
+userRouter.get("/:id/suggest", (req, res) => {
+  let userID = req.session.uid;
+
+  User.findById(userID, async (err, user) => {
+    if (err) {
+      return console.log(err);
+    }
+
+    if (!user) {
+      res.send("fail");
+      return console.log("해당 유저를 찾을 수 없습니다.");
+    }
+
+    let suggestList = await LectureDemandManager.Suggest(user);
+    res.send(suggestList);
+  });
+});
+
+//내가 튜터거나 튜티인 클래스들 받아오기
 userRouter.get("/class", function (req, res) {
   if (req.session.uid) {
     User.findById(req.session.uid, async (err, user) => {

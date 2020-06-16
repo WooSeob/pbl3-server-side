@@ -5,40 +5,62 @@ var Mail = require("../Schemas/MailAuth");
 
 const CM = require("../Controller/CategoryManager");
 const LectureDemandManager = require("../Controller/LectureDemandManager");
+const KME = require("../Controller/KeywordMatchingEngine");
 
 var searchRouter = express.Router();
 searchRouter.use(express.json());
 
-searchRouter.get("/:query", async (req, res) => {  
+searchRouter.get("/:query", async (req, res) => {
   // 키워드 매칭 작동
-  let MatchingResult = await CM.Search(req.params.query);
-  console.log("매칭 여부 : " + MatchingResult.isMatched);
-  console.log("DistanceAvg : " + MatchingResult.minDistance);
-  console.log("매칭 카테고리 정보 : " + MatchingResult.minDistCategory);
+  let bufferFeedbacks = await CM.getBufferFeedbacks(req.params.query)
+  let MatchingResult = await CM.Search(req.params.query, bufferFeedbacks);
+  //모든 수업 불러오기
+  let allClasses = await Class.find({}, "className tutor category");
+  //let AddResult = await CM.Major.addCategory(req.params.query)
 
+  // console.log("매칭 여부 : " + MatchingResult.isMatched);
+  // console.log("DistanceAvg : " + MatchingResult.minDistance);
+  // console.log("매칭 카테고리 정보 : " + MatchingResult.minDistCategory);
 
   var searchingArr = [];
-  
+
   let SearchResult = {
     classes: searchingArr,
-    matchedKeyword: null,
-    recommendKeyword: null
-  }
-
-  //모든 수업 불러오기
-  let allClasses = await Class.find({}, "className tutor");
+    matched: null,
+    recommend: null,
+  };
 
   //검색대상 설정
-  let targetKeywords;
+  let targetKeywords = new Array();
+  targetKeywords.push({ key: req.params.query });
+
   if (MatchingResult.isMatched) {
     //매치 됐을때
-    targetKeywords = MatchingResult.minDistCategory.keywords
-    SearchResult.matchedKeyword = MatchingResult.minDistCategory.representation
+
+    targetKeywords.concat(MatchingResult.minDistCategory.keywords)
+    SearchResult.matched = {
+      categoryID: MatchingResult.minDistCategory._id,
+      representation: MatchingResult.minDistCategory.representation,
+    };
+    await KME.addKeywordsToProperCategory(MatchingResult);
+
+
+    //카테고리 검색
+    allClasses.forEach(e => {
+      if(String(e.category) == String(MatchingResult.minDistCategory._id)){
+        searchingArr.push(e)
+      }
+    })
 
   } else {
     //매치 안됐을때
-    targetKeywords = [{ key: req.params.query }]
-    SearchResult.recommendKeyword = MatchingResult.minDistCategory.representation
+
+    await CM.addToBuffer(req.params.query, MatchingResult.minDistCategory);
+    
+    SearchResult.recommend = {
+      categoryID: MatchingResult.minDistCategory._id,
+      representation: MatchingResult.minDistCategory.representation,
+    };
   }
 
   //검색
@@ -55,11 +77,34 @@ searchRouter.get("/:query", async (req, res) => {
     LectureDemandManager.Count(MatchingResult.minDistCategory);
   }
 
-  res.send(SearchResult)
+  res.send(SearchResult);
 });
 
-searchRouter.get("/feedback", async (req, res) => {
-    //검색 품질 피드백
+searchRouter.get("/list/category", async (req, res)=>{
+  res.send(await CM.Major.get())
 })
+
+searchRouter.post("/feedback", async (req, res) => {
+  //검색 품질 피드백
+  // 매칭되서 추천한 키워드
+  // console.log(req.body.accurate)
+  // console.log(req.body.queriedKeyword)
+  // console.log(req.body.isMatched)
+  // console.log()
+
+  let recommended = {
+    categoryID: req.body.categoryID,
+    accurate: JSON.parse(req.body.accurate),
+  };
+  if (JSON.parse(req.body.isMatched)) {
+    console.log("매칭됬던 결과에 대한 피드백 시작");
+    //이게 있다면 매칭 true였었다는 뜻
+    CM.searchOptimization(true, req.body.queriedKeyword, recommended);
+  } else {
+    //이게 있다면 매칭 false였다는 뜻
+    console.log("매칭안됬던 결과에 대한 피드백 시작");
+    CM.searchOptimization(false, req.body.queriedKeyword, recommended);
+  }
+});
 
 module.exports = searchRouter;

@@ -1,0 +1,76 @@
+<HTML>
+    <Head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    </Head>
+    <Body>
+        <form action="">
+            <input type="text" id="query-string" placeholder="검색어를 입력하세요">
+            <input type="button" class="go" value="검색">
+        </form>
+        <div id="result"></div>
+
+        <input type="button" id="Pfeedback" value="검색어 매칭이 정확해요">
+        <input type="button" id="Nfeedback" value="검색어 매칭이 부정확해요">
+        <script>
+            let queriedKeyword
+            let isMatched
+            let recommend123
+
+            $('#Pfeedback').click(()=>{
+              feedback(true)  
+            })
+            $('#Nfeedback').click(()=>{
+              feedback(false)  
+            })
+
+            function feedback(accurate){
+                console.log(recommend123)
+                $.ajax({
+                    type: "POST",
+                    url: "/search/feedback",
+                    data:{
+                        accurate: accurate,
+                        queriedKeyword: queriedKeyword,
+                        isMatched: isMatched,
+                        categoryID: recommend123.categoryID
+                    },
+                    dataType: "json",
+                    success: (res)=>{
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            }
+
+            $('.go').click(search)
+
+            function search(){
+                queriedKeyword = $('#query-string').val();
+                $.ajax({
+                    type: "GET",
+                    url: "/search/" + queriedKeyword,
+                    dataType: "json",
+                    success: (res)=>{
+                        let suggest = ''
+                        if(res.matched != null){
+                            isMatched = true
+                            recommend123 = res.matched
+                            suggest += `${res.matched.representation}로 검색한 결과 입니다. </br>`
+                        }
+                        if(res.recommend != null){
+                            isMatched = false
+                            recommend123 = res.recommend
+                            suggest += `<p>이걸로 검색해 보시겠어요?</p><input type="button" class="go" value="${res.recommend.representation}"></br>`
+                        }
+                        console.log(recommend123)
+                        $('#result').html(suggest + JSON.stringify(res))
+                    },
+                    error: (xhr, status, responseTxt)=>{
+                        console.log(xhr);
+                    }
+                })
+            }
+        </script>
+    </Body>
+</HTML>
