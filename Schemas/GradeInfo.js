@@ -2,7 +2,8 @@ var mongoose = require('mongoose');
 // const { schema } = require('./User');
 
 const GradeInfoSchema = new mongoose.Schema({
-    gradeImage: mongoose.Schema.Types.Mixed,
+    imgName: String,
+    imgPath: String
 });
 
 module.exports = GradeInfoSchema;

@@ -252,27 +252,37 @@ function sendMail(email) {
   return randomNumber;
 }
 
-/* 성적인증 
+
 // 미들 웨어
+// public/gradeImg 폴더에 저장
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads");
+    cb(null, "public/gradeImg/");
   },
 
+  // file 객체의 originalname으로 filename 지정
   filename: function (req, file, cb) {
-    // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
     cb(null, file.originalname);
   },
 });
 
 const upload = multer({ storage: storage });
 
-router.post("/upload", upload.single("gradeAuth"), function (req, res) {
-  res.send("Uploaded : " + req.file.originalname);
-  console.log("성적인증 " + req.file.originalname);
-
+router.post("/upload", upload.single("gradeImg"), function (req, res) {
+  // 이미지 형식만 받음
+  if(req.file.mimetype == "image/png"  || 
+     req.file.mimetype == "image/jpeg" || 
+     req.file.mimetype == "image/gif"){
+    console.log(req.file)
+    res.send("success");
+  } else{
+    res.send("fail")
+  }
+  
+  // DB 스키마 변경 후.. --> imgName을 className으로 어떻게 할 수 있을지 생각..
   var newImage = new Grade({
-    gradeImage: { fileName: req.file.originalname, path: req.file.path },
+    imgName : req.file.filename,
+    imgPath : req.file.path
   });
 
   newImage.save(function (err) {
@@ -282,6 +292,6 @@ router.post("/upload", upload.single("gradeAuth"), function (req, res) {
     }
   });
 });
-*/
+
 
 module.exports = router;
