@@ -6,9 +6,10 @@ var mongoose = require("mongoose");
 const smtpTransport = require("nodemailer-smtp-transport");
 const nodemailer = require("nodemailer");
 var Mail = require("../Schemas/MailAuth");
-const hknuAddress = "@hknu.ac.kr";
+var GradeSchema = require("../Schemas/GradeInfo");
+const Grade = mongoose.model("grade", GradeSchema);
 mongoose.set("useFindAndModify", false);
-
+const multer = require("multer");
 
 router.use(express.json());
 
@@ -17,7 +18,7 @@ router.use(express.json());
 router.post("/login", function (req, res) {
   var uname = req.body.id;
   var pwd = req.body.password;
-  console.log(uname)
+  console.log(uname);
   User.findOne({ id: uname }, (err, user) => {
     console.log(user);
     if (err || user == null) {
@@ -80,7 +81,7 @@ router.post("/sendemail", function (req, res) {
 
   // 메일 보내는 Function - sendMail
   randomNumber = sendMail(userEmail + hknuAddress);
-  
+
   //클라이언트에게 이메일 보낸주소를 리턴
   res.send(userEmail + hknuAddress);
 
@@ -96,8 +97,7 @@ router.post("/sendemail", function (req, res) {
       var mailAuthInfo = new Mail({
         webmail: userEmail,
         authNum: randomNumber,
-        isAuth: false
-        
+        isAuth: false,
       });
 
       mailAuthInfo.save(function (err) {
@@ -124,7 +124,6 @@ router.post("/sendemail", function (req, res) {
             currentSecond +
             "초)"
         );
-      
       });
     } else {
       Mail.findOneAndUpdate(
@@ -135,7 +134,7 @@ router.post("/sendemail", function (req, res) {
             res.send("fail");
             console.log("이미 있는 메일주소이긴 하지만 에러가 발생합니다.");
           }
-          
+
           var f = new Date();
           var currentHour = f.getHours();
           var currentMinute = f.getMinutes();
@@ -156,54 +155,10 @@ router.post("/sendemail", function (req, res) {
               currentSecond +
               "초)"
           );
-          
         }
       );
     }
   });
-
-  // // 3분이 지나면 DB에 있는 정보를 삭제하는 Function
-  // function deleteInfo(userEmail) {
-  //   var d = new Date();
-  //   var currentHourDB = d.getHours();
-  //   var currentMinuteDB = d.getMinutes();
-  //   var currentSecondDB = d.getSeconds();
-  //   var deleteAuthInfo;
-
-  //   Mail.findOne({ webmail: userEmail }, (err, mail) => {
-  //     if (err || mail == null) {
-  //       console.log("존재하지않는 웹메일");
-  //       console.log(userEmail+ " !~~!")
-  //       res.send("fail");
-  //       return;
-  //     }
-  //     deleteAuthInfo = mail.isAuth;
-  //   });
-
-  //   if (deleteAuthInfo == false) {
-  //     Mail.deleteOne({ webmail: userWebmail }, function (err) {
-  //       if (err) {
-  //         return handleError(err);
-  //       } else {
-  //         console.log(
-  //           "\n***** " +
-  //             userWebmail +
-  //             " 님의 인증정보가 DB에서 삭제되었습니다!  (Time :" +
-  //             currentHourDB +
-  //             "시 " +
-  //             currentMinuteDB +
-  //             "분 " +
-  //             currentSecondDB +
-  //             "초) *****"
-  //         );
-  //       }
-  //     });
-  //   }
-  // }
-
-  // 3분을 기다렸다가, 저장되어있는 Info 삭제 60000 = 1분
-  // setTimeout(deleteInfo, 18000);
-  // clearTimeout(deleteInfo);
 });
 
 // auth라우터에서 라우팅
@@ -295,5 +250,37 @@ function sendMail(email) {
 
   return randomNumber;
 }
+
+/* 성적인증 
+// 미들 웨어
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+
+  filename: function (req, file, cb) {
+    // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+router.post("/upload", upload.single("gradeAuth"), function (req, res) {
+  res.send("Uploaded : " + req.file.originalname);
+  console.log("성적인증 " + req.file.originalname);
+
+  var newImage = new Grade({
+    gradeImage: { fileName: req.file.originalname, path: req.file.path },
+  });
+
+  newImage.save(function (err) {
+    if (err) {
+      res.send("fail");
+      return err;
+    }
+  });
+});
+*/
 
 module.exports = router;

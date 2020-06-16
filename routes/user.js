@@ -41,13 +41,13 @@ userRouter.post("/", function (req, res) {
   /* 인증여부에 따라 가입이 되고 안되고 구현 */
   /* 비어있는 칸이 있으면 에러 발생함 - 예외처리 */
   if (req.body.id == "") {
-    res.send("id를 입력해주세요!");
+    res.send("fail");
   } else if (req.body.password == "") {
-    res.send("password를 입력해주세요!");
+    res.send("fail");
   } else if (req.body.nickname == "") {
-    res.send("nickname을 입력해주세요!");
+    res.send("fail");
   } else if (req.body.major == "") {
-    res.send("major를 입력해주세요!");
+    res.send("fail");
   } else {
     Mail.findOne({ webmail: req.body.id }, (err, mail) => {
       if (err) {
@@ -193,5 +193,11 @@ userRouter.get("/class/tutee", function (req, res) {
     res.send("잘못된 접근입니다.");
   }
 });
+
+// // ----------------------- 강의 추천 시스템 -----------------------
+// userRouter.get("/suggestion", function(req, res){
+   
+// })
+
 
 module.exports = userRouter;

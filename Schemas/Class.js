@@ -5,6 +5,7 @@ var QnASchema = require("./QnA");
 var CourseSchema = require("./Course");
 var LectureTimeSchema = require("./LectureTime");
 var AttendanceSchema = require("./Participation");
+var GradeInfoSchema = require("./GradeInfo")
 
 const ClassStateManager = require("../Controller/ClassStateManager");
 const DataManager = require("../Controller/DataManager");
@@ -62,6 +63,8 @@ const ClassSchema = new mongoose.Schema({
 
   //--------------------------------------------------------------------------
   //강의실 홈에 보여질 내용 (성적인증, 소개글, 수업시간)
+  gradeInfo: GradeInfoSchema,
+
   basicInfo: ClassBasicInfoSchema,
   //강의노트
   lectureNotes: [LectureNoteSchema],
