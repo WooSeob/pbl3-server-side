@@ -251,7 +251,7 @@ function sendMail(email) {
   return randomNumber;
 }
 
-/* 성적인증 
+
 // 미들 웨어
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -268,10 +268,12 @@ const upload = multer({ storage: storage });
 
 router.post("/upload", upload.single("gradeAuth"), function (req, res) {
   res.send("Uploaded : " + req.file.originalname);
-  console.log("성적인증 " + req.file.originalname);
+  // console.log("성적인증 " + req.file.originalname);
+  console.log(req.file)
 
   var newImage = new Grade({
-    gradeImage: { fileName: req.file.originalname, path: req.file.path },
+    gradeImage: { fileName: req.file.originalname, 
+                  path: req.file.path },
   });
 
   newImage.save(function (err) {
@@ -281,6 +283,6 @@ router.post("/upload", upload.single("gradeAuth"), function (req, res) {
     }
   });
 });
-*/
+
 
 module.exports = router;
