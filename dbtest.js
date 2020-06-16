@@ -50,6 +50,8 @@ app.use('/auth', authRouter);
 app.use('/user', userRouter);
 app.use('/search', searchRouter);
 
+//테스팅
+app.use('/test', express.static('uploads'));
 
 //테스팅
 //var test = require('./test');

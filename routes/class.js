@@ -1,5 +1,7 @@
 var express = require("express");
 var mongoose = require("mongoose");
+// multer 모듈 import
+const multer = require("multer");
 var Class = require("../Schemas/Class");
 var User = require("../Schemas/User");
 
@@ -15,6 +17,7 @@ var LectureNoteSchema = require("../Schemas/LectureNote");
 var AttendanceSchema = require("../Schemas/Participation");
 var LectureDemandSchema = require("../Schemas/LectureDemand");
 
+
 const QnA = mongoose.model("QnA", QnASchema);
 const Course = mongoose.model("Course", CourseSchema);
 const ClassBasicInfo = mongoose.model("ClassBasicInfo", ClassBasicInfoSchema);
@@ -23,11 +26,30 @@ const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
 
+
 var classRouter = express.Router();
 classRouter.use(express.json());
 
-//수업생성
-classRouter.post("/", function (req, res) {
+// Multer 모듈 storage 사용 
+
+var storage = multer.diskStorage({
+  // destination - 목적 dir
+  destination: function (req, file, cb) {
+    cb(null, "/public/gradeImg/");
+  },
+
+  // filename : 저장할 파일 이름  fieldname 도 가능
+  filename: function (req, file, cb) {
+    // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+//수업생성                   
+//성적이미지 파일 name gradeInfo 여야 함
+classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
   //튜터 아이디로 수업 생성
   User.findById(req.session.uid, async (err, tutor) => {
     if (err) {
@@ -48,6 +70,12 @@ classRouter.post("/", function (req, res) {
       price: req.body.price,
       tutor: tutor._id,
       state: ClassConst.state.PREPARE,
+      
+      // path : 사진 저장되어 있는 경로 /public/gradeImg로 지정
+      gradeInfo: {
+        fileName: req.body.className,
+        path: req.file.path,
+      },
     });
 
     //기본정보
@@ -78,10 +106,10 @@ classRouter.post("/", function (req, res) {
     //강의시간 데이터 있으면 추가
     if (req.body.lectureTimes) {
       let Times = new Array();
-      for(let lectureTime of req.body.lectureTimes){
-        Times.push(new LectureTime(lectureTime))
+      for (let lectureTime of req.body.lectureTimes) {
+        Times.push(new LectureTime(lectureTime));
       }
-      
+
       await newClass.addClassData("LectureTime", Times, (errmsg) => {
         if (errmsg) {
           return console.log(errmsg);
@@ -772,8 +800,7 @@ classRouter.post("/search", function (req, res) {
   var alreadyInDB = false;
   var sortedArr;
   var today = new Date();
-  
-  
+
   // 모든 Class 조회
   Class.find({}, "className tutor", (err, found) => {
     if (err) {
@@ -789,7 +816,6 @@ classRouter.post("/search", function (req, res) {
     // 검색 결과 존재
     if (searchingArr.length > 0) {
       res.send(searchingArr);
-      
     } else if (searchingArr.length == 0) {
       //검색결과 존재 안함
       // res.send(searchingArr);
@@ -800,13 +826,13 @@ classRouter.post("/search", function (req, res) {
           res.send("fail");
           console.log(err);
         }
-        
+
         // DB가 비어있을 경우저장 (비어있으면 에러남)
         if (demand.length == 0) {
           var lectureSearch = new LectureDemand({
             lecture: userSearch,
             count: 1,
-            date: today.toLocaleDateString()
+            date: today.toLocaleDateString(),
           });
 
           lectureSearch.save(function (err) {
@@ -823,11 +849,17 @@ classRouter.post("/search", function (req, res) {
           demand.forEach(function (element) {
             if (
               (element.lecture.indexOf(userSearch) != -1 ||
-              userSearch.includes(element.lecture) == 1) &&
+                userSearch.includes(element.lecture) == 1) &&
               element.date == today.toLocaleDateString()
             ) {
               element.count++;
-              console.log("날짜 : " +today.toLocaleDateString()+ " 강의명 : " + userSearch + " - 수요 1 증가");
+              console.log(
+                "날짜 : " +
+                  today.toLocaleDateString() +
+                  " 강의명 : " +
+                  userSearch +
+                  " - 수요 1 증가"
+              );
               element.save();
               alreadyInDB = true;
               res.send(searchingArr);
@@ -840,7 +872,7 @@ classRouter.post("/search", function (req, res) {
           var lectureSearch = new LectureDemand({
             lecture: userSearch,
             count: 1,
-            date: today.toLocaleDateString()
+            date: today.toLocaleDateString(),
           });
 
           lectureSearch.save(function (err) {
@@ -857,7 +889,7 @@ classRouter.post("/search", function (req, res) {
       setTimeout(sort, 1700);
     }
   });
-  
+
   // 정렬 함수
   function sort() {
     LectureDemand.sorting((err, sort) => {
@@ -868,7 +900,5 @@ classRouter.post("/search", function (req, res) {
       console.log(sortedArr);
     });
   }
-
-
 });
 module.exports = classRouter;
