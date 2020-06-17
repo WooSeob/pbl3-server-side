@@ -54,7 +54,7 @@ classRouter.post("/", gradeImageUpload.single("gradeInfo"), function (req, res) 
       tutor: tutor._id,
       state: ClassConst.state.PREPARE,
     });
-
+    req.file.filename = newClass._id;
     //기본정보
     if (req.file && req.body.class_description) {
       //성적인증 이미지 저장
