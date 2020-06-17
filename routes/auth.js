@@ -9,7 +9,6 @@ var Mail = require("../Schemas/MailAuth");
 var GradeSchema = require("../Schemas/GradeInfo");
 const Grade = mongoose.model("grade", GradeSchema);
 mongoose.set("useFindAndModify", false);
-const multer = require("multer");
 const hknuAddress = "@hknu.ac.kr"
 
 router.use(express.json());
@@ -253,46 +252,9 @@ function sendMail(email) {
 }
 
 
-// 미들 웨어
-// public/gradeImg 폴더에 저장
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/gradeImg/");
-  },
 
-  // file 객체의 originalname으로 filename 지정
-  filename: function (req, file, cb) {
-    // 이부분에서 req.body.className 했을 때 받아오면 너무 좋을듯..
-    cb(null, file.originalname);
-  },
-});
 
-const upload = multer({ storage: storage });
 
-router.post("/upload", upload.single("gradeImg"), function (req, res) {
-  // 이미지 형식만 받음
-  if(req.file.mimetype == "image/png"  || 
-     req.file.mimetype == "image/jpeg" || 
-     req.file.mimetype == "image/gif"){
-    console.log(req.file)
-    res.send("success");
-  } else{
-    res.send("fail")
-  }
-  
-  // DB 스키마 변경 후.. --> imgName을 className으로 어떻게 할 수 있을지 생각..
-  var newImage = new Grade({
-    imgName : req.file.filename,
-    imgPath : req.file.path
-  });
-
-  newImage.save(function (err) {
-    if (err) {
-      res.send("fail");
-      return err;
-    }
-  });
-});
 
 
 module.exports = router;
