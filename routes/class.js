@@ -40,8 +40,8 @@ var storage = multer.diskStorage({
   // file 객체의 originalname으로 filename 지정
   filename: function (req, file, cb) {
     // 여기서 filename을 file.filename --> req.body.className 으로 바꿨을 때,
-    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..    
-    cb(null, file.originalname);
+    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..        
+    cb(null, file.originalname + " - " + Date.now());
   
   },
 });
@@ -74,12 +74,12 @@ classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
       state: ClassConst.state.PREPARE,
       
     });
-
+    req.file.filename = newClass._id;
     //기본정보
-    if (req.body.grade && req.body.class_description) {
+    if (req.file && req.body.class_description) {
       
       let basicInfo = new ClassBasicInfo({
-        grade: req.body.grade,
+        grade: req.file.path,
         description: req.body.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
