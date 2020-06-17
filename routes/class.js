@@ -24,15 +24,15 @@ const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
 const CM = require("../Controller/CategoryManager");
-
+const multer = require("multer");
+const FS = require('fs');
+const gradeImageUpload = multer({ storage: multer.memoryStorage() })
 
 var classRouter = express.Router();
 classRouter.use(express.json());
 
 
-//수업생성                   
-//성적이미지 파일 name gradeInfo 여야 함
-classRouter.post("/", function (req, res) {
+classRouter.post("/", gradeImageUpload.single("gradeInfo"), function (req, res) {
   //튜터 아이디로 수업 생성
   User.findById(req.session.uid, async (err, tutor) => {
     if (err) {
@@ -57,9 +57,18 @@ classRouter.post("/", function (req, res) {
     });
 
     //기본정보
-    if (req.body.grade && req.body.class_description) {
+    if (req.file && req.body.class_description) {
+      //성적인증 이미지 저장
+      let targetBuffer = req.file.buffer
+      let sp = req.file.originalname.split('.')
+      let extension = sp[sp.length - 1]
+      let ADDR = './public/gradeImg/' + newClass._id + '.' + extension
+      let fd = FS.openSync(ADDR, 'w')
+      FS.writeSync(fd, targetBuffer)
+      FS.closeSync(fd)
+
       let basicInfo = new ClassBasicInfo({
-        grade: req.body.grade,
+        grade: ADDR,
         description: req.body.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
@@ -83,8 +92,9 @@ classRouter.post("/", function (req, res) {
 
     //강의시간 데이터 있으면 추가
     if (req.body.lectureTimes) {
+      let lectureTimes = JSON.parse(req.body.lectureTimes)
       let Times = new Array();
-      for (let lectureTime of req.body.lectureTimes) {
+      for (let lectureTime of lectureTimes) {
         Times.push(new LectureTime(lectureTime));
       }
 
