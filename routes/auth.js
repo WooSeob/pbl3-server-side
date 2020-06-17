@@ -263,36 +263,45 @@ var storage = multer.diskStorage({
   filename: function (req, file, cb) {
     // 여기서 filename을 file.filename --> req.body.className 으로 바꿨을 때,
     // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..
-    cb(null, file.filename);
+    cb(null, file.originalname);
+  
   },
 });
 
 const upload = multer({ storage: storage });
 
 router.post("/upload", upload.single("gradeImg"), function (req, res) {
+  const accecpt = false;
+
   // 이미지 형식만 받음
-  if(req.file.mimetype == "image/png"  || 
-     req.file.mimetype == "image/jpeg" || 
-     req.file.mimetype == "image/gif"){
-    console.log(req.file)
+  if (
+    req.file.mimetype == "image/png" ||
+    req.file.mimetype == "image/jpeg" ||
+    req.file.mimetype == "image/gif"
+  ) {
+    console.log(req.file);
+    accecpt = true;
     res.send("success");
-  } else{
-    res.send("fail")
+  } else {
+    //TODO 다른파일온거 삭제코드 - accept로 control
+    res.send("fail");
   }
-  
+
   // DB 스키마 변경 후.. --> imgName을 className으로 어떻게 할 수 있을지 생각..
-  var newImage = new Grade({
-    imgName : req.file.filename,
-    imgPath : req.file.path
-  });
+  //TODO 프론트에서 file.originalname == class._id로 온다고 가정
+  if (accecpt == true) {
+    var newImage = new Grade({
+      imgName: req.file.filename,
+      imgPath: req.file.path,
+    });
 
-  newImage.save(function (err) {
-    if (err) {
-      res.send("fail");
-      return err;
-    }
-  });
+    newImage.save(function (err) {
+      if (err) {
+        res.send("fail");
+        return err;
+      }
+    });
+  }
 });
-
 
 module.exports = router;

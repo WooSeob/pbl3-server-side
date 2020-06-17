@@ -2,6 +2,7 @@ var express = require("express");
 var mongoose = require("mongoose");
 var Class = require("../Schemas/Class");
 var User = require("../Schemas/User");
+var multer = require("multer")
 
 const ClassConst = require("../Const/Class");
 const ClassStateManager = require("../Controller/ClassStateManager");
@@ -14,7 +15,7 @@ var LectureTimeSchema = require("../Schemas/LectureTime");
 var LectureNoteSchema = require("../Schemas/LectureNote");
 var AttendanceSchema = require("../Schemas/Participation");
 var LectureDemandSchema = require("../Schemas/LectureDemand");
-
+var GradeSchema = require("../Schemas/GradeInfo");
 
 const QnA = mongoose.model("QnA", QnASchema);
 const Course = mongoose.model("Course", CourseSchema);
@@ -23,15 +24,33 @@ const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
 const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
+const Grade = mongoose.model("grade", GradeSchema);
 
 
 var classRouter = express.Router();
 classRouter.use(express.json());
 
+// 미들 웨어
+// public/gradeImg 폴더에 저장
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/gradeImg/");
+  },
+
+  // file 객체의 originalname으로 filename 지정
+  filename: function (req, file, cb) {
+    // 여기서 filename을 file.filename --> req.body.className 으로 바꿨을 때,
+    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..
+    cb(null, file.originalname);
+  
+  },
+});
+
+const upload = multer({ storage: storage });
 
 //수업생성                   
 //성적이미지 파일 name gradeInfo 여야 함
-classRouter.post("/", function (req, res) {
+classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
   //튜터 아이디로 수업 생성
   User.findById(req.session.uid, async (err, tutor) => {
     if (err) {
@@ -57,8 +76,9 @@ classRouter.post("/", function (req, res) {
 
     //기본정보
     if (req.body.grade && req.body.class_description) {
+
       let basicInfo = new ClassBasicInfo({
-        grade: req.body.grade,
+        grade: req.file.originalname,
         description: req.body.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {

@@ -63,7 +63,7 @@ const ClassSchema = new mongoose.Schema({
 
   //--------------------------------------------------------------------------
   //강의실 홈에 보여질 내용 (성적인증, 소개글, 수업시간)
-  gradeInfo: GradeInfoSchema,
+  
 
   basicInfo: ClassBasicInfoSchema,
   //강의노트
