@@ -61,7 +61,7 @@ classRouter.post("/", gradeImageUpload.single("gradeInfo"), function (req, res) 
       let targetBuffer = req.file.buffer
       let sp = req.file.originalname.split('.')
       let extension = sp[sp.length - 1]
-      let ADDR = './public/gradeImg/' + newClass._id + '.' + extension
+      let ADDR = './gradeImg/' + newClass._id + '.' + extension
       let fd = FS.openSync(ADDR, 'w')
       FS.writeSync(fd, targetBuffer)
       FS.closeSync(fd)
