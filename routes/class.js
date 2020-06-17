@@ -2,7 +2,7 @@ var express = require("express");
 var mongoose = require("mongoose");
 var Class = require("../Schemas/Class");
 var User = require("../Schemas/User");
-var multer = require("multer")
+var multer = require("multer");
 
 const ClassConst = require("../Const/Class");
 const ClassStateManager = require("../Controller/ClassStateManager");
@@ -26,7 +26,6 @@ const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
 const CM = require("../Controller/CategoryManager");
 
-
 var classRouter = express.Router();
 classRouter.use(express.json());
 
@@ -40,18 +39,17 @@ var storage = multer.diskStorage({
   // file 객체의 originalname으로 filename 지정
   filename: function (req, file, cb) {
     // 여기서 filename을 file.filename --> req.body.className 으로 바꿨을 때,
-    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..        
-    cb(null, file.originalname + " - " + Date.now());
-  
+    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..
+    cb(null, file.originalname);
   },
 });
 
 const upload = multer({ storage: storage });
 
-//수업생성                   
+//수업생성
 //성적이미지 파일 name gradeInfo 여야 함
 classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
-  console.log(req.body)
+  console.log(req.body);
   //튜터 아이디로 수업 생성
   User.findById(req.session.uid, async (err, tutor) => {
     if (err) {
@@ -72,7 +70,6 @@ classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
       price: req.body.price,
       tutor: tutor._id,
       state: ClassConst.state.PREPARE,
-      
     });
     req.file.filename = newClass._id;
     //기본정보
@@ -103,8 +100,9 @@ classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
 
     //강의시간 데이터 있으면 추가
     if (req.body.lectureTimes) {
+      let lectureTimes = JSON.parse(req.body.lectureTimes);
       let Times = new Array();
-      for (let lectureTime of req.body.lectureTimes) {
+      for (let lectureTime of lectureTimes) {
         Times.push(new LectureTime(lectureTime));
       }
 
@@ -198,7 +196,6 @@ classRouter.get("/name/:name", function (req, res) {
     });
 });
 
-
 //수업id로 정보 받아오기
 classRouter.get("/:id", function (req, res) {
   let targetClassID = req.params.id;
@@ -217,7 +214,7 @@ classRouter.get("/:id", function (req, res) {
 
       let rData = Class.toObject();
       //카테고리ID -> 대표어로 변환후 전송
-      rData.category = await CM.getReprFromID(rData.category)
+      rData.category = await CM.getReprFromID(rData.category);
       rData.tutorNickName = user.nickname;
       res.send(rData);
     });
@@ -233,20 +230,20 @@ classRouter.get("/:id/tutees", (req, res) => {
       return res.send("fail");
     }
     Class.findById(targetClassID, async (err, Class) => {
-      let TuteeList = new Array()
+      let TuteeList = new Array();
 
       for (let tuteeID of Class.tutees) {
-        let tutee = await User.findById(tuteeID)
+        let tutee = await User.findById(tuteeID);
         TuteeList.push({
           nickname: tutee.nickname,
-          uID: tutee._id
-        })
+          uID: tutee._id,
+        });
       }
-      console.log(TuteeList)
-      res.send(TuteeList)
-    })
-  })
-})
+      console.log(TuteeList);
+      res.send(TuteeList);
+    });
+  });
+});
 
 //------------------------------------    정보추가    ------------------------------------
 //강의 기본정보 (성적인증이미지url, 소개글) 추가
