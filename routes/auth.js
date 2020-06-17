@@ -261,7 +261,9 @@ var storage = multer.diskStorage({
 
   // file 객체의 originalname으로 filename 지정
   filename: function (req, file, cb) {
-    cb(null, file.originalname);
+    // 여기서 filename을 file.filename --> req.body.className 으로 바꿨을 때,
+    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..
+    cb(null, file.filename);
   },
 });
 
