@@ -13,9 +13,17 @@ const CategorySchema = new mongoose.Schema({
         type: Number,
         default: 1,
       },
+      feedback: {
+        type: Number,
+        default: 0,
+      },
     }),
   ],
   maxCnt: {
+    type: Number,
+    default: 0
+  },
+  sumCnt: {
     type: Number,
     default: 0
   },
@@ -33,13 +41,51 @@ const CategorySchema = new mongoose.Schema({
 
 CategorySchema.pre('save', async function() {
   //대표어 갱신
+  let sumCnt = 0;
+  //TODO 최고 카운트였던 키워드 카운트가 내려갈때 maxCnt 다시찾게
   for(let keyword of this.keywords){
     if(this.maxCnt <= keyword.count){
       this.maxCnt = keyword.count
       this.representation = keyword.key
     }
+
+    sumCnt += keyword.count
   }
+  this.sumCnt = sumCnt
+
 });
+
+CategorySchema.methods.getKeys = function(){
+  let keys = []
+  for (let keyword of this.keywords) {
+    keys.push(keyword.key)
+  }
+  return keys
+}
+
+CategorySchema.methods.CountUp = async function(key){
+  console.log("카운트업")
+  console.log(key)
+  for (let keyword of this.keywords) {
+    if(keyword.key == key){
+      keyword.count++
+    }
+  }
+  let result = await this.save()
+  console.log(result)
+}
+
+CategorySchema.methods.CountDown = async function(key){
+  console.log("카운트다운")
+  console.log(key)
+  for (let keyword of this.keywords) {
+    if(keyword.key == key){
+      keyword.count--
+    }
+  }
+  let result = await this.save()
+  console.log(result)
+}
 
 CategorySchema.statics.getAllItems = async function () {
   let Item = [];

@@ -27,10 +27,9 @@ async function Count(targetCategory) {
 
     if (demand) {
       //기존에 있으면 카운트증가
-      demand.count++
-      let result = await demand.save()
-      console.log("수요 집계완료 " + result)
-
+      demand.count++;
+      let result = await demand.save();
+      console.log("수요 집계완료 " + result);
     } else {
       //기존에 없으면 새로 생성
       var lectureSearch = new LectureDemand({
@@ -58,7 +57,17 @@ async function Count(targetCategory) {
     });
   }
 }
+async function Suggest(user) {
+  let demand = await LectureDemand.findOne({ lecture: user.major });
+
+  //TODO 이 이하로 추천 로직 코딩할것 추천 할 카테고리는 배열에 담아서 리턴, 없으면 [] 리턴
+  if (demand != null) {
+    return [demand];
+  }
+  return [];
+}
 
 module.exports = {
   Count: Count,
+  Suggest: Suggest,
 };

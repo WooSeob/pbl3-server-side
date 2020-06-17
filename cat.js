@@ -1,6 +1,9 @@
 var mongoose = require("mongoose");
 const levenshtein = require("fast-levenshtein");
 const cm = require("./Controller/CategoryManager");
+const FS = require('fs');
+
+
 // DB 연결
 mongoose.connect("mongodb://localhost:27017/test", {
   useNewUrlParser: true,
@@ -100,7 +103,6 @@ const iDatas = [
 ];
 
 //데이터 셋 설정은 아래 DATA 를 수정할것
-var DATA = mDatas;
 var cnt = 0;
 
 const db = mongoose.connection;
@@ -110,12 +112,21 @@ db.once("open", async function () {
 
   const Category = mongoose.model("Category", require("./Schemas/Category"));
   Category.init()
-  .then(async ()=>{
+  .then(()=>{
     // 비동기 호출 문제 때문에 setTimeout으로 호출하고있음
-    for (let i = 0; i < DATA.length; i++) {
-      console.log("타임아웃설정 " + DATA[i]);
-      setTimeout(test1, 700 * i);
-    }
+
+    FS.readFile('categoryData.json', 'utf8', async function(err, data){
+      let Data = JSON.parse(data).datas
+      console.log(Data)
+      for (let i = 0; i < Data.length; i++){
+        let result = await cm.Major.addCategory(Data[i])
+      }
+    });
+    
+    // for (let i = 0; i < DATA.length; i++) {
+    //   console.log("타임아웃설정 " + DATA[i]);
+    //   setTimeout(test1, 1000 * i);
+    // }
     // searchOptimization()
     // console.log(await cm.Major.get())
   })  

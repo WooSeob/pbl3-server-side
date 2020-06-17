@@ -24,7 +24,7 @@ const LectureTime = mongoose.model("LectureTime", LectureTimeSchema);
 const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
-const Grade = mongoose.model("grade", GradeSchema);
+const CM = require("../Controller/CategoryManager");
 
 
 var classRouter = express.Router();
@@ -78,7 +78,7 @@ classRouter.post("/", upload.single("gradeInfo"), function (req, res) {
     if (req.body.grade && req.body.class_description) {
 
       let basicInfo = new ClassBasicInfo({
-        grade: req.file.originalname,
+        grade: req.body.grade,
         description: req.body.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
@@ -197,6 +197,7 @@ classRouter.get("/name/:name", function (req, res) {
     });
 });
 
+
 //수업id로 정보 받아오기
 classRouter.get("/:id", function (req, res) {
   let targetClassID = req.params.id;
@@ -207,18 +208,45 @@ classRouter.get("/:id", function (req, res) {
     }
 
     //튜터 닉네임 추가해서 응답
-    User.findById(Class.tutor, (err, user) => {
+    User.findById(Class.tutor, async (err, user) => {
       if (err) {
         console.log(err);
         return res.send("fail");
       }
 
       let rData = Class.toObject();
+      //카테고리ID -> 대표어로 변환후 전송
+      rData.category = await CM.getReprFromID(rData.category)
       rData.tutorNickName = user.nickname;
       res.send(rData);
     });
   });
 });
+
+classRouter.get("/:id/tutees", (req, res) => {
+  let targetClassID = req.params.id;
+  let userID = req.session.uid;
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
+    Class.findById(targetClassID, async (err, Class) => {
+      let TuteeList = new Array()
+
+      for (let tuteeID of Class.tutees) {
+        let tutee = await User.findById(tuteeID)
+        TuteeList.push({
+          nickname: tutee.nickname,
+          uID: tutee._id
+        })
+      }
+      console.log(TuteeList)
+      res.send(TuteeList)
+    })
+  })
+})
+
 //------------------------------------    정보추가    ------------------------------------
 //강의 기본정보 (성적인증이미지url, 소개글) 추가
 classRouter.post("/:id/basic-info", (req, res) => {
@@ -380,6 +408,35 @@ classRouter.get("/:id/start", (req, res) => {
       }
 
       ClassStateManager.startLecture(Class, (err) => {
+        if (err) {
+          console.log(err);
+          return res.send("fail");
+        }
+        res.send("success");
+      });
+    });
+  });
+});
+
+//종강 처리
+//TODO 나중에 수정할것
+classRouter.get("/:id/end", (req, res) => {
+  let userID = req.session.uid;
+  let targetClassID = req.params.id;
+
+  User.isTutorOf(userID, targetClassID, (err, user) => {
+    if (err) {
+      console.log(err);
+      return res.send("fail");
+    }
+
+    Class.findById(targetClassID, (err, Class) => {
+      if (err) {
+        console.log(err);
+        return res.send("fail");
+      }
+
+      ClassStateManager.endLecture(Class, (err) => {
         if (err) {
           console.log(err);
           return res.send("fail");
@@ -898,4 +955,5 @@ classRouter.post("/search", function (req, res) {
     });
   }
 });
+
 module.exports = classRouter;

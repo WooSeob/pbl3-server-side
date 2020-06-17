@@ -10,6 +10,7 @@ var GradeSchema = require("../Schemas/GradeInfo");
 const Grade = mongoose.model("grade", GradeSchema);
 mongoose.set("useFindAndModify", false);
 const multer = require("multer");
+const hknuAddress = "@hknu.ac.kr"
 
 router.use(express.json());
 
@@ -261,8 +262,7 @@ var storage = multer.diskStorage({
 
   // file 객체의 originalname으로 filename 지정
   filename: function (req, file, cb) {
-    // 여기서 filename을 file.filename --> req.body.className 으로 바꿨을 때,
-    // 정상적으로 실행 --> className 저장, err 발생 --> 다시 생각..
+    // 이부분에서 req.body.className 했을 때 받아오면 너무 좋을듯..
     cb(null, file.originalname);
   
   },
@@ -270,9 +270,9 @@ var storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/upload", upload.single("gradeImg"), function (req, res) {
+router.post("/upload",  upload.single("gradeInfo"), function (req, res) {
   const accecpt = false;
-
+ 
   // 이미지 형식만 받음
   if (
     req.file.mimetype == "image/png" ||
