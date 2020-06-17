@@ -1,5 +1,7 @@
 var express = require("express");
 var mongoose = require("mongoose");
+const multer = require("multer");
+
 var Class = require("../Schemas/Class");
 var User = require("../Schemas/User");
 
@@ -15,7 +17,6 @@ var LectureNoteSchema = require("../Schemas/LectureNote");
 var AttendanceSchema = require("../Schemas/Participation");
 var LectureDemandSchema = require("../Schemas/LectureDemand");
 
-
 const QnA = mongoose.model("QnA", QnASchema);
 const Course = mongoose.model("Course", CourseSchema);
 const ClassBasicInfo = mongoose.model("ClassBasicInfo", ClassBasicInfoSchema);
@@ -24,7 +25,6 @@ const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 const LectureDemand = mongoose.model("LectureDemand", LectureDemandSchema);
 const CM = require("../Controller/CategoryManager");
-const multer = require("multer");
 const FS = require('fs');
 const gradeImageUpload = multer({ storage: multer.memoryStorage() })
 
@@ -53,7 +53,6 @@ classRouter.post("/", gradeImageUpload.single("gradeInfo"), function (req, res) 
       price: req.body.price,
       tutor: tutor._id,
       state: ClassConst.state.PREPARE,
-
     });
 
     //기본정보
@@ -188,7 +187,6 @@ classRouter.get("/name/:name", function (req, res) {
     });
 });
 
-
 //수업id로 정보 받아오기
 classRouter.get("/:id", function (req, res) {
   let targetClassID = req.params.id;
@@ -207,7 +205,7 @@ classRouter.get("/:id", function (req, res) {
 
       let rData = Class.toObject();
       //카테고리ID -> 대표어로 변환후 전송
-      rData.category = await CM.getReprFromID(rData.category)
+      rData.category = await CM.getReprFromID(rData.category);
       rData.tutorNickName = user.nickname;
       res.send(rData);
     });
@@ -223,20 +221,20 @@ classRouter.get("/:id/tutees", (req, res) => {
       return res.send("fail");
     }
     Class.findById(targetClassID, async (err, Class) => {
-      let TuteeList = new Array()
+      let TuteeList = new Array();
 
       for (let tuteeID of Class.tutees) {
-        let tutee = await User.findById(tuteeID)
+        let tutee = await User.findById(tuteeID);
         TuteeList.push({
           nickname: tutee.nickname,
-          uID: tutee._id
-        })
+          uID: tutee._id,
+        });
       }
-      console.log(TuteeList)
-      res.send(TuteeList)
-    })
-  })
-})
+      console.log(TuteeList);
+      res.send(TuteeList);
+    });
+  });
+});
 
 //------------------------------------    정보추가    ------------------------------------
 //강의 기본정보 (성적인증이미지url, 소개글) 추가
