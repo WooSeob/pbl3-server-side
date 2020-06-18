@@ -6,8 +6,6 @@ var mongoose = require("mongoose");
 const smtpTransport = require("nodemailer-smtp-transport");
 const nodemailer = require("nodemailer");
 var Mail = require("../Schemas/MailAuth");
-var GradeSchema = require("../Schemas/GradeInfo");
-const Grade = mongoose.model("grade", GradeSchema);
 mongoose.set("useFindAndModify", false);
 const hknuAddress = "@hknu.ac.kr"
 
