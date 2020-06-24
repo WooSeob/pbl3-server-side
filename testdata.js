@@ -76,9 +76,7 @@ let additionalDataByTypes = {
     //강의시간
     data.lectureTimes = TIME_ALLDAY;
   },
-  OnlineCourseType: (data) => {
-
-  },
+  OnlineCourseType: (data) => {},
   QnAType: (data) => {
     //강의시간
     data.lectureTimes = TIME_ALLDAY;
@@ -134,7 +132,7 @@ async function mainlogic() {
       process.exit();
     } else if (type === "8") {
       //자동생성
-      makeTestData(30,200);
+      makeTestData(30, 200);
     } else {
       if (!newUser) {
         newUser = await makeUser("테스트유저" + 1);
@@ -207,9 +205,9 @@ async function makeTestData(uSize, cSize) {
   for (let username of UserNames) {
     let user = await makeUser(username);
 
-    let s = cSize/uSize
+    let s = cSize / uSize;
     for (let j = 0; j < s; j++) {
-      let classname = ClassNames.pop()
+      let classname = ClassNames.pop();
 
       let type = types[randomNum(0, 3)];
       let data = {
@@ -227,6 +225,40 @@ async function makeTestData(uSize, cSize) {
     }
   }
 
+  //조인
+  //유저 랜덤으로 골라서
+  //그놈 하나잡고 수업 랜덤으로 골라서
+  //조인
+  let userNumToJoin = 30;
+  let classNumToJoin = 10;
+
+  let Users = await User.find();
+  let Classes = await Class.find();
+
+  let targetusers = new Array();
+
+  while (targetusers.length < userNumToJoin - 1) {
+    let selectedUser = Users[randomNum(0, Users.length)];
+    if (targetusers.includes(selectedUser)) {
+      continue;
+    }
+    targetUsers.push(selectedUser);
+  }
+
+  for (let user of targetUsers) {
+    let targetClasses = new Array();
+    while (targetClasses.length < classNumToJoin - 1) {
+      let selectedClass = Classes[randomNum(0, Classes.length)];
+      if (targetClasses.includes(selectedClass)) {
+        continue;
+      }
+      targetClasses.push(selectedClass);
+    }
+
+    for (let c of targetClasses) {
+      makeJoin(user._id, c._id);
+    }
+  }
 }
 
 async function setCategory() {
@@ -274,6 +306,59 @@ async function makeUser(name) {
   return newUser;
 }
 
+async function makeJoin(userID, targetClassID) {
+  User.findById(userID, async (err, user) => {
+    Class.findById(targetClassID, (err, targetClass) => {
+      if (err) {
+        return console.log(err);
+      }
+      let joinAllowed = true;
+
+      // 해당 강의가 open되지 않은경우 or 정원초과
+      if (!targetClass.isJoinAllowed()) {
+        joinAllowed = false;
+      }
+
+      // user가 해당 강의 튜터인 경우
+      if (String(userID) == String(targetClass.tutor)) {
+        console.log("요청하는사람이 이미 튜터임");
+        joinAllowed = false;
+      }
+
+      // user가 이미 해당 강의 튜티인 경우
+      for (let tuteeID of targetClass.tutees) {
+        if (String(userID) == String(tuteeID)) {
+          console.log("이미 수강중입니다.");
+          joinAllowed = false;
+        }
+      }
+
+      //포인트 없으면 수강신청 못함
+      if (user.point < targetClass.price) {
+        console.log("포인트가 부족합니다.");
+        joinAllowed = false;
+      }
+
+      if (joinAllowed) {
+        //아직 수강하지 않은경우 -> 수강할 수 있음
+        console.log("수강신청완료");
+
+        targetClass.tutees.push(userID);
+        targetClass.save();
+
+        //포인트차감
+        user.point = user.point - targetClass.price;
+        user.classesAsTutee.push(targetClass._id);
+        user.save();
+      } else {
+        //강의가 참여할 수 없는 상태//내가 그 강의의 튜터인 경우//이미 수강중인경우//강의가 정원 초과한경우//포인트가 부족한경우
+
+        console.log("수강신청에 실패했습니다.");
+        return;
+      }
+    });
+  });
+}
 async function resetDB() {
   await db.dropCollection("classes", async function (err, result) {
     await console.log("클래스 삭제");
@@ -336,7 +421,7 @@ async function makeClass(data, userID) {
     //기본정보
     if (data.class_description) {
       let basicInfo = new ClassBasicInfo({
-        grade: './gradeImg/' + newClass._id + '.png',
+        grade: "./gradeImg/" + newClass._id + ".png",
         description: data.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
