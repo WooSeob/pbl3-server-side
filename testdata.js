@@ -294,7 +294,7 @@ function randomNum(min, max) {
 async function makeUser(name) {
   let categoryList = await CM.Major.get();
   if (categoryList.length == 0) {
-    setCategory();
+    await setCategory();
   }
 
   newUser = await User.create({
@@ -396,7 +396,7 @@ async function resetDB() {
 async function makeClass(data, userID) {
   let categoryList = await CM.Major.get();
   if (categoryList.length == 0) {
-    setCategory();
+    await setCategory();
   }
 
   //기본적으로 강의개설직후는 '준비중' 상태
