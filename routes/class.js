@@ -60,13 +60,13 @@ classRouter.post("/", gradeImageUpload.single("gradeInfo"), function (req, res) 
       let targetBuffer = req.file.buffer
       let sp = req.file.originalname.split('.')
       let extension = sp[sp.length - 1]
-      let ADDR = './gradeImg/' + newClass._id + '.' + extension
-      let fd = FS.openSync(ADDR, 'w')
+      let ADDR = '/gradeImg/' + newClass._id + '.' + extension
+      let fd = FS.openSync('./public' + ADDR, 'w')
       FS.writeSync(fd, targetBuffer)
       FS.closeSync(fd)
 
       let basicInfo = new ClassBasicInfo({
-        grade: ADDR,
+        grade: '.' + ADDR,
         description: req.body.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
