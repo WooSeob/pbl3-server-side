@@ -20,7 +20,7 @@ const LectureNote = mongoose.model("LectureNote", LectureNoteSchema);
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 
 const CM = require("./Controller/CategoryManager");
-const FS = require('fs');
+const FS = require("fs");
 
 //입력 관리
 const readline = require("readline");
@@ -29,44 +29,43 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-
 const TIME_ALLDAY = [
   {
     day: "Mon",
-    finish:  "2359",
-    start:  "0000"
+    finish: "2359",
+    start: "0000",
   },
   {
     day: "Tue",
-    finish:  "2359",
-    start:  "0000"
+    finish: "2359",
+    start: "0000",
   },
   {
     day: "Wed",
-    finish:  "2359",
-    start:  "0000"
+    finish: "2359",
+    start: "0000",
   },
   {
     day: "Thu",
-    finish:  "2359",
-    start:  "0000"
+    finish: "2359",
+    start: "0000",
   },
   {
     day: "Fri",
-    finish:  "2359",
-    start:  "0000"
+    finish: "2359",
+    start: "0000",
   },
   {
     day: "Sat",
-    finish:  "2359",
-    start:  "0000"
+    finish: "2359",
+    start: "0000",
   },
   {
     day: "Sun",
-    finish:  "2359",
-    start:  "0000"
-  }
-]
+    finish: "2359",
+    start: "0000",
+  },
+];
 
 let additionalDataByTypes = {
   RealtimeOnlineCourseType: (data) => {
@@ -78,7 +77,7 @@ let additionalDataByTypes = {
     //최대튜티수
     data.maxTutee = 3;
     //강의시간
-    data.lectureTimes =TIME_ALLDAY
+    data.lectureTimes = TIME_ALLDAY;
   },
   OnlineCourseType: (data) => {
     //기본정보
@@ -91,7 +90,7 @@ let additionalDataByTypes = {
     data.grade = "성적인증URL";
 
     //강의시간
-    data.lectureTimes = TIME_ALLDAY
+    data.lectureTimes = TIME_ALLDAY;
   },
   OfflineType: (data) => {
     //기본정보
@@ -100,7 +99,7 @@ let additionalDataByTypes = {
     //최대튜티수
     data.maxTutee = 3;
     //강의시간
-    data.lectureTimes = TIME_ALLDAY
+    data.lectureTimes = TIME_ALLDAY;
     //강의장소
     data.place = "황소갈매기";
   },
@@ -114,7 +113,7 @@ let types = [
 ];
 
 async function mainlogic() {
-  let newUser = makeUser(1);
+  let newUser = makeUser("테스트유저" + 1);
   console.log(newUser + "\n테스트 유저 생성 성공");
 
   let selectedType;
@@ -136,7 +135,7 @@ async function mainlogic() {
       userCount = 2;
       continue;
     } else if (type === "6") {
-      let newUser = await makeUser(userCount++);
+      let newUser = await makeUser("테스트유저" + userCount++);
       console.log(newUser + "\n테스트 유저 생성 성공");
       console.log("\n----------------------------");
       console.log(
@@ -145,9 +144,12 @@ async function mainlogic() {
       continue;
     } else if (type === "7") {
       process.exit();
+    } else if (type === "8") {
+      //자동생성
+      makeTestData();
     } else {
       if (!newUser) {
-        newUser = await makeUser(1);
+        newUser = await makeUser("테스트유저" + 1);
         console.log(newUser + "\n테스트 유저 생성 성공");
       }
 
@@ -188,21 +190,70 @@ db.once("open", function () {
 
 mainlogic();
 
-async function setCategory(){
-  FS.readFile('categoryData.json', 'utf8', async function(err, data){
-    let Data = JSON.parse(data).datas
-    console.log(Data)
-    for (let i = 0; i < Data.length; i++){
-      let result = await CM.Major.addCategory(Data[i])
+async function makeTestData(uSize, cSize) {
+  let data = require("./demo");
+
+  let UserNames = new Array();
+  let ClassNames = new Array();
+  while (UserNames.length < uSize - 1) {
+    let userName =
+      data.uAdj[randomNum(0, data.uAdj.length - 1)] +
+      data.uNoun[randomNum(0, data.uNoun.length - 1)];
+    if (UserNames.includes(userName)) {
+      continue;
     }
-  });
-  let categoryList = await CM.Major.get()
-  console.log("카테고리 생성을 완료 했습니다.")
-  console.log("생성된 카테고리 : ")
-  console.log(categoryList)
+    UserNames.push(userName);
+  }
+
+  while (ClassNames.length < cSize - 1) {
+    let className =
+      data.cAdj[randomNum(0, data.cAdj.length - 1)] +
+      data.cNoun[randomNum(0, data.cNoun.length - 1)];
+    if (ClassNames.includes(className)) {
+      continue;
+    }
+    ClassNames.push(className);
+  }
+
+  for (let username of UserNames) {
+    let user = await makeUser(username);
+
+    let s = cSize/uSize
+    for (let j = 0; j < s; j++) {
+      let classname = ClassNames.pop()
+      
+      let type = types[randomNum(0, 3)];
+      let data = {
+        classType: type,
+        studyAbout: "수업 과목",
+        className: classname,
+        price: 10,
+      };
+
+      //타입별 데이터세팅
+      additionalDataByTypes[type](data);
+      //생성
+      makeClass(data, user.id);
+    }
+  }
+
 }
 
-async function makeCategory(type, name, subItems){
+async function setCategory() {
+  FS.readFile("categoryData.json", "utf8", async function (err, data) {
+    let Data = JSON.parse(data).datas;
+    console.log(Data);
+    for (let i = 0; i < Data.length; i++) {
+      let result = await CM.Major.addCategory(Data[i]);
+    }
+  });
+  let categoryList = await CM.Major.get();
+  console.log("카테고리 생성을 완료 했습니다.");
+  console.log("생성된 카테고리 : ");
+  console.log(categoryList);
+}
+
+async function makeCategory(type, name, subItems) {
   // let newCategory = await Category.create({
   //   type: type,
   //   name: name,
@@ -215,16 +266,16 @@ function randomNum(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-async function makeUser(num) {
-  let categoryList = await CM.Major.get()
-  if(categoryList.length == 0){
-    setCategory()
+async function makeUser(name) {
+  let categoryList = await CM.Major.get();
+  if (categoryList.length == 0) {
+    setCategory();
   }
 
   newUser = await User.create({
-    id: "test" + num,
+    id: new Date().getTime(),
     password: "asdf",
-    nickname: "테스트유저" + num,
+    nickname: name,
     major: categoryList[randomNum(0, categoryList.length)].cID,
     point: 10000000,
     classesAsTutee: [],
@@ -265,10 +316,9 @@ async function resetDB() {
 }
 
 async function makeClass(data, userID) {
-
-  let categoryList = await CM.Major.get()
-  if(categoryList.length == 0){
-    setCategory()
+  let categoryList = await CM.Major.get();
+  if (categoryList.length == 0) {
+    setCategory();
   }
 
   //기본적으로 강의개설직후는 '준비중' 상태
@@ -321,8 +371,8 @@ async function makeClass(data, userID) {
     //강의시간 데이터 있으면 추가
     if (data.lectureTimes) {
       let Times = new Array();
-      for(let lectureTime of data.lectureTimes){
-        Times.push(new LectureTime(lectureTime))
+      for (let lectureTime of data.lectureTimes) {
+        Times.push(new LectureTime(lectureTime));
       }
 
       await newClass.addClassData("LectureTime", Times, (errmsg) => {
