@@ -238,24 +238,27 @@ async function makeTestData(uSize, cSize) {
   let targetusers = new Array();
 
   while (targetusers.length < userNumToJoin - 1) {
-    let selectedUser = Users[randomNum(0, Users.length)];
+    let selectedUser = Users[randomNum(0, Users.length - 1)];
     if (targetusers.includes(selectedUser)) {
       continue;
     }
     targetUsers.push(selectedUser);
   }
-
+  console.log("targetUsers is " + targetUsers);
   for (let user of targetUsers) {
     let targetClasses = new Array();
     while (targetClasses.length < classNumToJoin - 1) {
-      let selectedClass = Classes[randomNum(0, Classes.length)];
+      let selectedClass = Classes[randomNum(0, Classes.length - 1)];
       if (targetClasses.includes(selectedClass)) {
         continue;
       }
       targetClasses.push(selectedClass);
     }
+    console.log("targetClasses is " + targetClasses);
 
     for (let c of targetClasses) {
+      console.log(user._id);
+      console.log(c._id);
       makeJoin(user._id, c._id);
     }
   }
