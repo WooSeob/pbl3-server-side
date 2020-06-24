@@ -235,11 +235,11 @@ async function makeTestData(uSize, cSize) {
   let Users = await User.find();
   let Classes = await Class.find();
 
-  let targetusers = new Array();
+  let targetUsers = new Array();
 
-  while (targetusers.length < userNumToJoin - 1) {
+  while (targetUsers.length < userNumToJoin - 1) {
     let selectedUser = Users[randomNum(0, Users.length - 1)];
-    if (targetusers.includes(selectedUser)) {
+    if (targetUsers.includes(selectedUser)) {
       continue;
     }
     targetUsers.push(selectedUser);
