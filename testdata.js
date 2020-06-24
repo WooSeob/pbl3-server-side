@@ -69,9 +69,6 @@ const TIME_ALLDAY = [
 
 let additionalDataByTypes = {
   RealtimeOnlineCourseType: (data) => {
-    //기본정보
-    data.class_description = "자동 생성된 테스트 데이터 입니다.";
-    data.grade = "성적인증URL";
     //커리큘럼
     data.course_description = "커리큘럼";
     //최대튜티수
@@ -80,22 +77,13 @@ let additionalDataByTypes = {
     data.lectureTimes = TIME_ALLDAY;
   },
   OnlineCourseType: (data) => {
-    //기본정보
-    data.class_description = "자동 생성된 테스트 데이터 입니다.";
-    data.grade = "성적인증URL";
+
   },
   QnAType: (data) => {
-    //기본정보
-    data.class_description = "자동 생성된 테스트 데이터 입니다.";
-    data.grade = "성적인증URL";
-
     //강의시간
     data.lectureTimes = TIME_ALLDAY;
   },
   OfflineType: (data) => {
-    //기본정보
-    data.class_description = "자동 생성된 테스트 데이터 입니다.";
-    data.grade = "성적인증URL";
     //최대튜티수
     data.maxTutee = 3;
     //강의시간
@@ -146,7 +134,7 @@ async function mainlogic() {
       process.exit();
     } else if (type === "8") {
       //자동생성
-      makeTestData();
+      makeTestData(30,200);
     } else {
       if (!newUser) {
         newUser = await makeUser("테스트유저" + 1);
@@ -158,6 +146,7 @@ async function mainlogic() {
       console.log(`${selectedType} 선택 됐습니다.`);
 
       let data = {
+        class_description: "자동 생성된 테스트 데이터 입니다.",
         classType: selectedType,
         studyAbout: "수업 과목",
         className: "테스트" + classCount++,
@@ -221,9 +210,10 @@ async function makeTestData(uSize, cSize) {
     let s = cSize/uSize
     for (let j = 0; j < s; j++) {
       let classname = ClassNames.pop()
-      
+
       let type = types[randomNum(0, 3)];
       let data = {
+        class_description: classname,
         classType: type,
         studyAbout: "수업 과목",
         className: classname,
@@ -233,7 +223,7 @@ async function makeTestData(uSize, cSize) {
       //타입별 데이터세팅
       additionalDataByTypes[type](data);
       //생성
-      makeClass(data, user.id);
+      await makeClass(data, user.id);
     }
   }
 
@@ -344,9 +334,9 @@ async function makeClass(data, userID) {
     });
 
     //기본정보
-    if (data.grade && data.class_description) {
+    if (data.class_description) {
       let basicInfo = new ClassBasicInfo({
-        grade: data.grade,
+        grade: './gradeImg/' + newClass._id + '.png',
         description: data.class_description,
       });
       await newClass.addClassData("BasicInfo", basicInfo, (errmsg) => {
