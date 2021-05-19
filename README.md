@@ -6,7 +6,7 @@
 2. 기여 내용
 
    - Node.js, Express, mongoDB, mongoose, socket.io를 사용했으며 아래와 같은기능을 개발했습니다.
-     1. mongoDB 스키마 설계
+     1. mongoose 스키마 설계
      2. HTTP API (회원 가입, 인증, 튜터링 개설, 참가, 출석, 강의 검색) 를 제공하는 백엔드
      3. 채팅방을 위한 socket.io 서버 개발
      4. 데모 시연을 위한 더미 데이터 생성툴을 개발했습니다.
